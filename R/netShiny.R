@@ -1,3 +1,18 @@
+#' This function launches the netShiny Shiny app.
+#'
+#' @param Net.obj A list containing correlation matrices and/or dataframes.
+#' @param mapping A dataframe containing the mapping of the nodes in the networks. The names must match the column names in the Net.obj argument.
+#' @param resamples A list containing a list of resampling data of the Net.obj argument.
+#' @return A Shiny app.
+#' @examples
+#' netShiny()
+#' @author
+#' Rocherno de Jongh and Pariya Behrouzi \cr
+#' Maintainer: Rocherno de Jongh \email{rocherno.dejongh@@hotmail.com}
+#' @references
+#' Behrouzi, P., and Wit, E. C. (2017c). netgwas: An R Package for Network-Based Genome-Wide Association Studies. arXiv preprint, arXiv:1710.01236.
+#' @seealso \code{\link[netgwas]{netphenogeno}}, \code{\link[netgwas]{selectnet}}
+#' @export
 netShiny <- function(Net.obj = NULL,
                      mapping = NULL,
                      resamples = NULL){
@@ -24,8 +39,6 @@ netShiny <- function(Net.obj = NULL,
   library(xlsx)
 
   plan(callr)
-
-  #source("helper_functions.R")
 
   sett_nms <- NULL
   all_node_nms <- NULL
@@ -94,7 +107,7 @@ netShiny <- function(Net.obj = NULL,
     )
   )
 
-  options(spinner.color = "#007c00", spinner.size = 2)
+  withr::local_options(list(spinner.color = "#007c00", spinner.size = 2))
   shinyWidgets::useSweetAlert()
 
   body <- shinydashboard::dashboardBody(
@@ -473,77 +486,76 @@ netShiny <- function(Net.obj = NULL,
       shinyjs::disable("dropdown_res")
     }
 
-    #source("helper_functions.R")
-
     #reactive value that reacts when when either the data for environements are changed, or
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
     #right panel network
-    coords <- shiny::eventReactive(c(input$cor_t,
-                                     input$cor_m,
-                                     input$net1,
-                                     input$net2,
-                                     input$roundness,
-                                     input$ok_sel_nodes,
-                                     vals$tree_root,
-                                     vals$rseed,
-                                     vals$sett_names,
-                                     vals$map_nodes), {
-                                       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
-                                       mat_f <- getNZ(vals$networks[[input$net1]], vals$n_traits, input$cor_t, input$cor_m)
-                                       mat_f2 <- getNZ(vals$networks[[input$net2]], vals$n_traits, input$cor_t, input$cor_m)
-                                       mat_f@x[abs(mat_f@x) > 0] <- 1
-                                       mat_f2@x[abs(mat_f2@x) > 0] <- 1
-                                       if(!is.null(input$nodes_subgraph)){
-                                         ind_subgraph_nodes <- which(dimnames(mat_f)[[2]] %in% input$nodes_subgraph)
-                                         summ_df <- summary(mat_f)
-                                         summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
-                                         nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
-                                         nms_subgraph_nodes <- dimnames(mat_f)[[2]][nms_subgraph_nodes]
-                                         mat_f <- mat_f[nms_subgraph_nodes, nms_subgraph_nodes]
+    shiny::observeEvent(c(input$cor_t,
+                          input$cor_m,
+                          input$net1,
+                          input$net2,
+                          input$roundness,
+                          input$ok_sel_nodes,
+                          vals$tree_root,
+                          vals$rseed,
+                          vals$sett_names,
+                          vals$map_nodes), {
+                            shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
+                            mat_f <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
+                            mat_f2 <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
+                            mat_f@x[abs(mat_f@x) > 0] <- 1
+                            mat_f2@x[abs(mat_f2@x) > 0] <- 1
+                            if(!is.null(input$nodes_subgraph)){
+                              # ind_subgraph_nodes <- which(dimnames(mat_f)[[2]] %in% input$nodes_subgraph)
+                              # summ_df <- summary(mat_f)
+                              # summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
+                              # nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
+                              # nms_subgraph_nodes <- dimnames(mat_f)[[2]][nms_subgraph_nodes]
+                              # mat_f <- mat_f[nms_subgraph_nodes, nms_subgraph_nodes]
+                              mat_f <- get_subnet(vals = vals, mat = mat_f)
 
-                                         ind_subgraph_nodes <- which(dimnames(mat_f2)[[2]] %in% input$nodes_subgraph)
-                                         summ_df <- summary(mat_f2)
-                                         summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
-                                         nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
-                                         nms_subgraph_nodes <- dimnames(mat_f2)[[2]][nms_subgraph_nodes]
-                                         mat_f2 <- mat_f2[nms_subgraph_nodes, nms_subgraph_nodes]
-                                       }
-                                       g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
-                                       g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
-                                       attrs <- rbind(as_data_frame(g_f, "vertices"), as_data_frame(g_f2, "vertices")) %>% unique()
-                                       el <- rbind(as_data_frame(g_f), as_data_frame(g_f2))
-                                       g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
-                                       if(input$layout == "Tree"){
-                                         lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
-                                       }
-                                       else if(input$layout == "kk"){
-                                         lay <- igraph::layout_with_kk(g_f)
-                                       }
-                                       else if(input$layout == "Fruchterman-Reingold"){
-                                         lay <- igraph::layout_with_fr(g_f, weights = NULL)
-                                       }
-                                       else if(input$layout == "DrL"){
-                                         #isolated <- which(degree(g_f) == 0)
-                                         #print(isolated)
-                                         #g_f_ni <- delete.vertices(g_f, isolated)
-                                         #lay <- layout_with_drl(g_f_ni, weights = NULL)
-                                         lay <- igraph::layout_nicely(g_f, weights = NULL)
-                                       }
-                                       else{
-                                         lay <- igraph::layout_nicely(g_f, weights = NULL)
-                                       }
-                                       row.names(lay) <- names(igraph::V(g_f))
-                                       vals$coords <- lay
-                                       lay
-                                     })
+                              # ind_subgraph_nodes <- which(dimnames(mat_f2)[[2]] %in% input$nodes_subgraph)
+                              # summ_df <- summary(mat_f2)
+                              # summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
+                              # nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
+                              # nms_subgraph_nodes <- dimnames(mat_f2)[[2]][nms_subgraph_nodes]
+                              # mat_f2 <- mat_f2[nms_subgraph_nodes, nms_subgraph_nodes]
+                              mat_f2 <- get_subnet(vals = vals, mat = mat_f2)
+                            }
+                            g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
+                            g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
+                            attrs <- rbind(as_data_frame(g_f, "vertices"), as_data_frame(g_f2, "vertices")) %>% unique()
+                            el <- rbind(as_data_frame(g_f), as_data_frame(g_f2))
+                            g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
+                            if(input$layout == "Tree"){
+                              lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
+                            }
+                            else if(input$layout == "kk"){
+                              lay <- igraph::layout_with_kk(g_f)
+                            }
+                            else if(input$layout == "Fruchterman-Reingold"){
+                              lay <- igraph::layout_with_fr(g_f, weights = NULL)
+                            }
+                            else if(input$layout == "DrL"){
+                              #isolated <- which(degree(g_f) == 0)
+                              #print(isolated)
+                              #g_f_ni <- delete.vertices(g_f, isolated)
+                              #lay <- layout_with_drl(g_f_ni, weights = NULL)
+                              lay <- igraph::layout_nicely(g_f, weights = NULL)
+                            }
+                            else{
+                              lay <- igraph::layout_nicely(g_f, weights = NULL)
+                            }
+                            row.names(lay) <- names(igraph::V(g_f))
+                            vals$coords <- lay
+                          })
 
     #Evertime a node is clicked, change to the bootstraps tab with
     #the information for the clicked trait/marker
     shiny::observeEvent({input$click}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::updateTabItems(session, "tabs", selected = "net")
-      nz_nodes <- get_nz_nodes(vals$networks[[1]], vals$n_traits)
+      nz_nodes <- get_nz_nodes(vals = vals, input = input, mat = vals$networks[[1]])
       shiny::updateSelectInput(session, "marker", selected = input$click, choices = c(input$click, nz_nodes))
     })
 
@@ -721,7 +733,7 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$subgraph, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      all_nodes <- get_nz_nodes(vals$networks[[1]], vals$n_traits)
+      all_nodes <- get_nz_nodes(mat = vals$networks[[1]], vals = vals, input = input)
       if(vals$mode == "gxe"){
         dialog_title <- "Select Markers/Traits for Subgraph"
       }
@@ -757,7 +769,7 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$reset_sel_nodes, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      all_nodes <- get_nz_nodes(vals$networks[[1]], 20)
+      all_nodes <- get_nz_nodes(mat = vals$networks[[1]], vals = vals, input = input)
       shinyWidgets::updatePrettyCheckboxGroup(session, inputId = "nodes_subgraph", label = NULL, choices = all_nodes, selected = NULL)
     })
 
@@ -766,12 +778,12 @@ netShiny <- function(Net.obj = NULL,
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
-      mat <- getNZ(vals$networks[[input$net1]], ntraits = vals$n_traits, input$cor_t, input$cor_m)
-      mat <- get_subnet(mat)
+      mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
+      mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
-      g <- get_g_complete(mat)
-      lay <- get_igraph_lay(mat)
-      vis_net <- get_vis_net(mat, g, lay)
+      g <- get_g_complete(vals = vals, mat = mat)
+      lay <- get_igraph_lay(vals = vals, input = input, mat = mat)
+      vis_net <- get_vis_net(vals = vals, input = input, mat = mat, g = g, lay = lay)
       vis_net
     })
 
@@ -780,12 +792,12 @@ netShiny <- function(Net.obj = NULL,
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
-      mat <- getNZ(vals$networks[[input$net2]], vals$n_traits, input$cor_t, input$cor_m)
-      mat <- get_subnet(mat)
+      mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
+      mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
-      g <- get_g_complete(mat)
-      lay <- get_igraph_lay(mat)
-      vis_net <- get_vis_net(mat, g, lay)
+      g <- get_g_complete(vals = vals, mat = mat)
+      lay <- get_igraph_lay(vals = vals, input = input, mat = mat)
+      vis_net <- get_vis_net(vals = vals, input = input, mat = mat, g = g, lay = lay)
 
       vis_net
     })
@@ -794,7 +806,7 @@ netShiny <- function(Net.obj = NULL,
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       if(shiny::isTruthy(input$cor_m)){
-        p <- get_summ_stats_plot(input$cor_t, input$cor_m, input$meas_butt)
+        p <- get_summ_stats_plot(vals = vals, input = input)
         p
       }
 
@@ -805,7 +817,7 @@ netShiny <- function(Net.obj = NULL,
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       if(shiny::isTruthy(input$cor_m)){
-        p <- get_par_cor_plot()
+        p <- get_par_cor_plot(vals = vals, input = input)
         p
       }
     }, bg = "#F5F2F2")
@@ -814,7 +826,7 @@ netShiny <- function(Net.obj = NULL,
     output$net_plot <- plotly::renderPlotly({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- get_weights_analysis_plot()
+      p <- get_weights_analysis_plot(vals = vals, input = input)
       gp <- plotly::ggplotly(p, tooltip = c("text"))
 
       if(is.null(vals$map_nodes)){
@@ -824,7 +836,6 @@ netShiny <- function(Net.obj = NULL,
           gp$x$data[[i]]$text <- text
         }
       }
-
       gp %>%
         plotly::layout(paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
     })
@@ -838,7 +849,7 @@ netShiny <- function(Net.obj = NULL,
         shinyjs::hide("cen_meas_col_switch")
       }
       if(shiny::isTruthy(input$cor_m)){
-        p <- create_central_meas(vals$networks, vals$sett_names)
+        p <- create_central_meas(vals = vals, input = input)
         p
       }
     }, bg = "#F5F2F2")
@@ -846,7 +857,7 @@ netShiny <- function(Net.obj = NULL,
     output$diff_sets <- DT::renderDataTable({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       if(shiny::isTruthy(input$cor_m)){
-        dt <- get_diff_sets()
+        dt <- get_diff_sets(vals = vals, input = input)
         dt
       }
 
@@ -854,13 +865,13 @@ netShiny <- function(Net.obj = NULL,
 
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      net <- getDif()
+      net <- getDif(vals = vals, input = input)
       net
     })
 
     output$distances_table <- shiny::renderTable({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      dist_mat <- apply_mat_dist_list(vals$networks, dist = input$dist_meas_table, mat_type = input$mat_type_table)
+      dist_mat <- apply_mat_dist_list(vals = vals, input = input)
       dist_mat
     }, rownames = TRUE, na = "")
 
@@ -872,7 +883,7 @@ netShiny <- function(Net.obj = NULL,
     output$distances_plot <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(length(input$dist_meas_plot) > 0, "Choose a distance measure"))
-      p <- apply_mat_dist_list(vals$networks, dist = input$dist_meas_plot, mat_type = input$mat_type_plot, for_plot = TRUE)
+      p <- apply_mat_dist_list(vals = vals, input = input, for_plot = TRUE)
       p
 
     })
@@ -885,28 +896,28 @@ netShiny <- function(Net.obj = NULL,
     output$mods <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       if(shiny::isTruthy(input$cor_m)){
-        p <- modularity_plot()
+        p <- modularity_plot(vals = vals, input = input)
         p
       }
     }, bg = "transparent")
 
     output$comms_plot <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- comm_detection_plot(input$net1)
+      p <- comm_detection_plot(vals = vals, input = input, setting = input$net1)
       p
 
     }, bg = "transparent")
 
     output$comms_plot2 <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- comm_detection_plot(input$net2)
+      p <- comm_detection_plot(vals = vals, input = input, setting = input$net2)
       p
     }, bg = "transparent")
 
     output$unc_check_plot <- plotly::renderPlotly({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(futureData$data10), "No Resampling Data"))
-      p <- bootstrap_func(futureData$data10)
+      p <- bootstrap_func(vals = vals, mkr = input$marker, new_res = futureData$data10)
       shinyjs::enable("marker")
       p
     })
@@ -948,7 +959,7 @@ netShiny <- function(Net.obj = NULL,
         }
         progress <- ipc::AsyncProgress$new(message = "Bootstrapping Procedure")
         new_rec <- NULL
-        l_args <- get_args_recon(FALSE)
+        l_args <- get_args_recon(input = input, start_up = FALSE)
 
         list_sett <- lapply(uploadedFiles$files, function(df) replicate(n_res, df[sample(1:nr, size = nr, replace = TRUE), ], simplify = FALSE))
         myFuture <<- future::future({
@@ -1038,7 +1049,7 @@ netShiny <- function(Net.obj = NULL,
           sett_upFiles(t_name)
         }
         else{
-          uploadedFiles$files[[t_name]] <- read.csv(input$files_upload[[i, 'datapath']], row.names = NULL)
+          uploadedFiles$files[[t_name]] <- utils::read.csv(input$files_upload[[i, 'datapath']], row.names = NULL)
           sett_upFiles(t_name)
         }
       }
@@ -1061,14 +1072,14 @@ netShiny <- function(Net.obj = NULL,
                                                                     header = input$header)
         }
         else{
-          uploadedFiles$files[[input$currFile]] <- read.csv(input$files_upload[[ind, 'datapath']], row.names = NULL,
-                                                            header = input$header,
-                                                            sep = input$sep,
-                                                            quote = input$quote)
+          uploadedFiles$files[[input$currFile]] <- utils::read.csv(input$files_upload[[ind, 'datapath']], row.names = NULL,
+                                                                   header = input$header,
+                                                                   sep = input$sep,
+                                                                   quote = input$quote)
         }
       }
       col_excl <- col_to_exclude(input$exc_columns)
-      uploadedFiles$files[[input$currFile]] <- check_cols_to_excl(uploadedFiles$files[[input$currFile]], col_excl)
+      uploadedFiles$files[[input$currFile]] <- check_cols_to_excl(session = session, df = uploadedFiles$files[[input$currFile]], vec = col_excl)
       sett_upFiles(input$currFile)
     })
 
@@ -1105,15 +1116,15 @@ netShiny <- function(Net.obj = NULL,
           mapping <- xlsx::read.xlsx2(mapping_file$datapath, sheetIndex = 1, header = input$header_mapping)
         }
         else{
-          mapping <- read.csv(file = mapping_file$datapath, row.names = NULL,
-                              header = input$header_mapping,
-                              sep = input$sep_mapping,
-                              quote = input$quote_mapping)
+          mapping <- utils::read.csv(file = mapping_file$datapath, row.names = NULL,
+                                     header = input$header_mapping,
+                                     sep = input$sep_mapping,
+                                     quote = input$quote_mapping)
         }
       }
 
       col_excl <- col_to_exclude(input$exc_columns_mapping)
-      mapping <- check_cols_to_excl(mapping, col_excl)
+      mapping <- check_cols_to_excl(session = session, df = mapping, vec = col_excl)
       if(ncol(mapping) > 2 && is.null(vals$mapping)){
         shiny::showNotification("Only the first two columns will be used", type = "warning")
       }
@@ -1157,8 +1168,8 @@ netShiny <- function(Net.obj = NULL,
       vals$node_names <- colnames(uploadedFiles$files[[1]])
       sapply(c(args_all, "net_method_start", "file_names", "adv_op"), shinyjs::disable)
 
-      args <- get_args_recon(TRUE)
-      perform_startup_recon(args)
+      args <- get_args_recon(input = input, start_up = TRUE)
+      vals$networks <- perform_startup_recon(val_nets = vals$networks, files = uploadedFiles$files, l_args = args)
 
       if(length(vals$networks) > 0){
         vals$sett_names <- names(vals$networks)
@@ -1202,8 +1213,8 @@ netShiny <- function(Net.obj = NULL,
 
         #Check if user passed something for trait types field
         if(!length(vect_err) && shiny::isTruthy(input$trait_types)){
-          trt_typs <- get_trait_groups()
-          #Check if the trait grouping passed is corect
+          trt_typs <- get_trait_groups(input$trait_types)
+          #Check if the trait grouping passed is correct
           if(shiny::isTruthy(input$trait_types) && is.null(trt_typs)){
             vect_err <- append(vect_err, "Incorrect format fot the grouping of traits")
           }
@@ -1229,27 +1240,19 @@ netShiny <- function(Net.obj = NULL,
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
-        map_nodes_to_group(trt_typs)
-        if(shiny::isTruthy(vals$map_nodes)){
-          mapping_com <- vals$map_nodes[, 1:2]
-          bool_group_col <- length(unique(mapping_com[, 1])) < length(unique(mapping_com[, 2]))
-          if(bool_group_col){
-            colnames(mapping_com)[1:2] <- c("node_group", "node")
-          }
-          else{
-            colnames(mapping_com)[1:2] <- c("node", "node_group")
-          }
-          vals$map_nodes <- complete_df(mapping_com)
-        }
+
+        vals$map_nodes <- map_nodes_to_group(vals = vals, input = input, trt_typs = trt_typs)
+        vals$map_nodes <- complete_df(vals = vals)
 
         #Get all the names of the markers that have at least one connections
         #with any other marker (or trait)
-        av_mks <- unlist(lapply(vals$networks, get_nz_nodes, ntraits = vals$n_traits))
+        av_mks <- unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input))
         av_mks <- unique(av_mks)
         av_mks <- av_mks[order(match(av_mks, vals$node_names))]
         shiny::updateSelectInput(session, "marker", choices = av_mks)
 
         shinyBS::toggleModal(session = session, modalId = "data_settings", toggle = "close")
+        shinyjs::disable("gxe_mode")
       }
     })
 
@@ -1270,9 +1273,9 @@ netShiny <- function(Net.obj = NULL,
     })
 
     shiny::observeEvent(input$adv_op, {
-      args_net <- formalArgs(netgwas::netphenogeno)[-c(1, 2)]
+      args_net <- methods::formalArgs(netgwas::netphenogeno)[-c(1, 2)]
       args_net <- paste("net_", args_net, "_start", sep = "")
-      args_sel <- formalArgs(netgwas::selectnet)[-1]
+      args_sel <- methods::formalArgs(netgwas::selectnet)[-1]
       args_sel <- paste("sel_", args_sel, "_start", sep = "")
       args_all <- c(args_net, args_sel, "sel_net_tag")
       if(isTRUE(input$adv_op)){
