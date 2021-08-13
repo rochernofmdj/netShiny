@@ -24,7 +24,6 @@ Imports:
     plotly (>= 4.9.3),
     promises (>= 1.2.0.1),
     scales (>= 1.1.1),
-    shinyBS (>= 0.61),
     shinycssloaders (>= 1.0.0),
     shinyjs (>= 2.0.0),
     shinyscreenshot (>= 0.1.0),
@@ -36,6 +35,7 @@ Imports:
     withr (>= 2.4.2),
     xlsx (>= 0.6.5)
 Depends: 
+    shinyBS (>= 0.61),
     shiny (>= 1.6.0),
     shinydashboard (>= 0.7.1)
 License: GPL (>= 3)

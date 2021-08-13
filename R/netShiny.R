@@ -6,7 +6,7 @@
 #' @return A Shiny app.
 #' @details This function opens the shiny app, netShiny. All of the arguments in netShiny are optional, so netShiny can be called without any arguments. Users are prompted with a series of modal dialogs after running the netShiny function. The first modal dialog gives users the possibility to upload files to the app and show the dataframes that already uploaded in a datatable. Users can choose files which contain information to reconstruct networks from them. The next modal dialog let users reconstruct networks using the dataframes that were uploaded. netShiny uses the functions netphenogeno and selectnet from the package netgwas for graph structure learning from non-Gaussian data. The next modal let users optionally choose a file containing the ordering of the nodes. If a dataframe containing the ordering of the nodes was already passed to mapping argument, this modal will visualize this in a datatable. The last modal let users choose the mode they want the app to run in, GxE (Genetic-by-Environment) or general mode. In GxE mode the language used in netShiny is more Genetic-by-Environment related. Users need to input the number of traits if GxE mode is chosen, and optionally, manually input a grouping for the traits.
 #' @examples
-#' library(netShiny)
+#' sum(2, 2)
 #' @author
 #' Rocherno de Jongh and Pariya Behrouzi \cr
 #' Maintainer: Rocherno de Jongh \email{rocherno.dejongh@@hotmail.com}
@@ -14,32 +14,15 @@
 #' Behrouzi, P., and Wit, E. C. (2017c). netgwas: An R Package for Network-Based Genome-Wide Association Studies. arXiv preprint, arXiv:1710.01236.
 #' @seealso \code{\link[netgwas]{netphenogeno}}, \code{\link[netgwas]{selectnet}}
 #' @export
+#' @import shiny shinyBS shinydashboard
 netShiny <- function(Net.obj = NULL,
                      mapping = NULL,
                      resamples = NULL){
 
-  library(DT)
-  library(future)
-  library(future.callr)
-  library(ggplot2)
-  library(igraph)
-  library(ipc)
-  library(Matrix)
-  library(netgwas)
-  library(plotly)
-  library(promises)
-  library(shiny)
-  library(shinyBS)
-  library(shinycssloaders)
-  library(shinydashboard)
-  library(shinyjs)
-  library(shinyscreenshot)
-  library(shinyWidgets)
-  library(tools)
-  library(visNetwork)
-  library(xlsx)
 
-  plan(callr)
+
+
+  future::plan(future.callr::callr)
 
   sett_nms <- NULL
   all_node_nms <- NULL
@@ -525,8 +508,8 @@ netShiny <- function(Net.obj = NULL,
                             }
                             g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
                             g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
-                            attrs <- rbind(as_data_frame(g_f, "vertices"), as_data_frame(g_f2, "vertices")) %>% unique()
-                            el <- rbind(as_data_frame(g_f), as_data_frame(g_f2))
+                            attrs <- unique(rbind(igraph::as_data_frame(g_f, "vertices"), igraph::as_data_frame(g_f2, "vertices")))
+                            el <- rbind(igraph::as_data_frame(g_f), igraph::as_data_frame(g_f2))
                             g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
                             if(input$layout == "Tree"){
                               lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
@@ -555,7 +538,7 @@ netShiny <- function(Net.obj = NULL,
     #the information for the clicked trait/marker
     shiny::observeEvent({input$click}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      shiny::updateTabItems(session, "tabs", selected = "net")
+      shinydashboard::updateTabItems(session, "tabs", selected = "net")
       nz_nodes <- get_nz_nodes(vals = vals, input = input, mat = vals$networks[[1]])
       shiny::updateSelectInput(session, "marker", selected = input$click, choices = c(input$click, nz_nodes))
     })
@@ -837,8 +820,7 @@ netShiny <- function(Net.obj = NULL,
           gp$x$data[[i]]$text <- text
         }
       }
-      gp %>%
-        plotly::layout(paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
+      plotly::layout(gp, paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
     })
 
     output$centrality_plots <- shiny::renderPlot({
@@ -942,7 +924,7 @@ netShiny <- function(Net.obj = NULL,
     })
 
     futureData <- shiny::reactiveValues(data10 = resamples)
-    myFuture <<- NULL
+    myFuture <- NULL
 
     shiny::observeEvent(input$unc_check_confirm, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))

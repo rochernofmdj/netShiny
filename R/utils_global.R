@@ -85,7 +85,7 @@ get_nz_nodes <- function(mat, vals, input){
 }
 
 del_iso_nodes <- function(graph_object){
-  isolated <- which(degree(graph_object) == 0)
+  isolated <- which(igraph::degree(graph_object) == 0)
   graph_object_connected <- igraph::delete.vertices(graph_object, isolated)
   return(graph_object_connected)
 }

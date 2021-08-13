@@ -147,7 +147,6 @@ get_con <- function(mat, sett, node){
 # Function that gets the weights analysis plot
 # This function takes in no argument and returns a ggplot object
 get_weights_analysis_plot <- function(vals, input){
-  print(vals$map_nodes)
   df_conns <- mapply(get_con, mat = vals$networks, sett = vals$sett_names, node = input$marker, SIMPLIFY = FALSE)
   df_conns <- do.call("rbind", df_conns)
   if(shiny::isTruthy(vals$map_nodes)){
@@ -190,8 +189,6 @@ get_weights_analysis_plot <- function(vals, input){
     ggplot2::geom_hline(yintercept = 0) +
     ggplot2::labs(fill = NULL) +
     ggplot2::theme(legend.position = lgnd.pos)
-  print(df_conns)
-  print(frame_colors)
   if(shiny::isTruthy(vals$map_nodes)){
     p <- p +
       ggplot2::scale_fill_manual(values = frame_colors)
@@ -656,8 +653,7 @@ bootstrap_func <- function(vals, mkr, new_res){
     gp$x$data[[i]]$text <- text
   }
 
-  gp <- gp %>%
-    plotly::layout(paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
+  gp <- plotly::layout(gp, paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
 
   return(gp)
 }
@@ -782,7 +778,7 @@ comm_detection_plot <- function(vals, input, setting){
     g <- del_iso_nodes(g)
 
     lay <- igraph::layout_with_fr(g)
-    row.names(lay) <- names(V(g))
+    row.names(lay) <- names(igraph::V(g))
 
     if(input$cluster_algs == "Fast Greedy"){
       try(c1 <- igraph::cluster_fast_greedy(g))

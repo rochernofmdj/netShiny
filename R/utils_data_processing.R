@@ -238,3 +238,8 @@ get_trait_groups <- function(trait_types){
     return(NULL)
   }
 }
+
+utils::globalVariables(c("net2", "value", "Distance Measure", "node", "freq", "node_group", "%>%",
+                         "V", "Name", "Value", "Setting", "from", "to", "degree", "weights", "type", "stat",
+                         "width", "density", "sett", "val", "cons", "isTruthy", "HTML", "textOutput",
+                         "myFuture", '<<-', "head", "as_data_frame"))
