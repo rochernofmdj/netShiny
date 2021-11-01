@@ -40,15 +40,15 @@ igraph::add.vertex.shape("fcircle", clip = igraph::igraph.shape.noclip,
 get_g_complete <- function(vals, mat){
   g <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = TRUE)
   # In gxe mode traits and marker nodes have different sizes
-  if(vals$mode == "gxe" && !is.null(vals$map_nodes)){
-    labs <- vals$map_nodes[vals$map_nodes$node %in% igraph::vertex_attr(g, "name"), ]
-    traits_mat <- sum(labs$node_group == "Trait")
-    igraph::V(g)$size <- c(rep(20, traits_mat), rep(14, length(labs$node_group) - traits_mat))
-  }
+  # if(vals$mode == "gxe" && !is.null(vals$map_nodes)){
+  #   labs <- vals$map_nodes[vals$map_nodes$node %in% igraph::vertex_attr(g, "name"), ]
+  #   traits_mat <- sum(labs$node_group == "Trait")
+  # }
 
   #Assign color to edges depending if it is negative (red) or (positive) blue
   if(!is.null(igraph::E(g)$weight)){
-    edge_cols <- ifelse(igraph::E(g)$weight > 0, "blue", "red")
+    edge_cols <- rep("blue", length(igraph::E(g)$weight))
+    edge_cols[igraph::E(g)$weight < 0] <- "red"
     value <- abs(igraph::E(g)$weight)
     igraph::E(g)$color <- edge_cols
     igraph::E(g)$width <- value
@@ -57,7 +57,7 @@ get_g_complete <- function(vals, mat){
   return(g)
 }
 
-# Function that gets the proper layour for the networks
+# Function that gets the proper layout for the networks
 # This function takes a (sparse) matrix as an argument and
 # returns a dataframe with the coordinates layout
 get_igraph_lay <- function(vals, input, mat){
@@ -67,14 +67,14 @@ get_igraph_lay <- function(vals, input, mat){
   g_lay <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected")
   lay <- igraph::layout_nicely(g_lay)
   row.names(lay) <- names(igraph::V(g_lay))
-
   # Changing coordinates to match global network
+  row_lay <- rownames(lay)
+  row_coords <- rownames(vals$coords)
   for (i in 1:nrow(lay)){
-    if(is.element(rownames(lay)[i], rownames(vals$coords))){
-      lay[rownames(lay)[i], ] <- vals$coords[rownames(lay)[i], ]
+    if(is.element(row_lay[i], row_coords)){
+      lay[rownames(lay)[i], ] <- vals$coords[row_lay[i], ]
     }
   }
-
   # Make sure that isolated nodes are not too far away from the rest of the nodes
   if (shiny::isolate(input$layout == "Tree")){
     s <- which(igraph::degree(g_lay) == 0)
@@ -99,8 +99,7 @@ get_vis_net <- function(vals, input, mat, g, lay){
   sel_nodes <- dimnames(mat)[[1]]
   test.visn <- visNetwork::toVisNetworkData(g)
   sel_by <- NULL
-
-  if(!is.null(vals$map_nodes)){
+  if(shiny::isTruthy(vals$map_nodes)){
     if(vals$mode == "gxe"){
       sel_by <- "Chromosome"
       test.visn$nodes$Chromosome <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
@@ -110,21 +109,35 @@ get_vis_net <- function(vals, input, mat, g, lay){
       test.visn$nodes$Group <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
     }
     test.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
-    igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    #igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
   }
-
+  if(isTruthy(vals$map_nodes$node_size)){
+    test.visn$nodes$value <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_size
+  }
+  else{
+    if(vals$mode == "gxe"){
+      test.visn$nodes$size <- c(rep(30, vals$n_traits), rep(20, nrow(test.visn$nodes) - vals$n_traits))
+    }
+    else{
+      test.visn$nodes$size <- rep(25, nrow(test.visn$nodes))
+    }
+  }
   if(!is.null(igraph::E(g)$weight)){
     test.visn$edges$value <- abs(igraph::E(g)$weight)
   }
-  test.visn$nodes$font.size <- 17
-
-  visNetwork::visNetwork(test.visn$nodes, test.visn$edges, height = '1000px', width = '1000px') %>%
+  if(shiny::isTruthy(vals$map_nodes$font_size)){
+    test.visn$nodes$font.size <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$font_size
+  }
+  else{
+    test.visn$nodes$font.size <- 17
+  }
+  visNetwork::visNetwork(test.visn$nodes, test.visn$edges, height = '100%', width = '100%') %>%
     visNetwork::visIgraphLayout(layout = "layout.norm", layoutMatrix = lay, randomSeed = vals$rseed) %>%
     visNetwork::visOptions(highlightNearest = list(enabled = T, hover = T), selectedBy = sel_by) %>%
     visNetwork::visInteraction(multiselect = TRUE) %>%
     visNetwork::visEvents(doubleClick =  "function(nodes){Shiny.onInputChange('click', nodes.nodes[0]);;}") %>%
     visNetwork::visEdges(smooth = list(enabled = TRUE, type = "curvedCCW", roundness = input$roundness)) %>%
-    return
+    return()
 }
 
 ##########################################################
@@ -250,6 +263,17 @@ getDif <- function(vals, input){
   mat1 <- vals$networks[[input$net1]]
   mat2 <- vals$networks[[input$net2]]
 
+  if(dim(mat1)[[1]] != dim(mat2)[[1]]){
+    shiny::showNotification("WARNING: Dimension of Networks Are Different. Only Common Nodes Will Be Used.", type = "warning", duration = NULL)
+    mat1_nodes <- dimnames(mat1)[[2]]
+    mat2_nodes <- dimnames(mat2)[[2]]
+    intersection <- intersect(mat1_nodes, mat2_nodes)
+    mat1_ind <- which(mat1_nodes %in% intersection)
+    mat2_ind <- which(mat2_nodes %in% intersection)
+    mat1 <- mat1[mat1_ind, mat1_ind]
+    mat2 <- mat2[mat2_ind, mat2_ind]
+  }
+
   newobj <- list()
 
   mat1@x[mat1@x < 0] <- -1
@@ -265,7 +289,6 @@ getDif <- function(vals, input){
 
   diff <- getNZ(vals = vals, input = input, mat = diff, diff = TRUE)
   nms <- dimnames(diff)[[2]]
-
   clrs <- c("blue", "red", "green")
   summ <- Matrix::summary(diff)
   summ$i <- nms[summ$i]
@@ -275,7 +298,6 @@ getDif <- function(vals, input){
   diff@x[diff@x != 0] <- 1
   newobj$opt.adj <- diff
   newobj$changes <- summ
-
   shiny::validate(
     shiny::need(dim(newobj$opt.adj)[[1]] != 0, "No Difference Between Networks")
   )
@@ -306,7 +328,7 @@ getDif <- function(vals, input){
     visNetwork::visIgraphLayout()  %>%
     visNetwork::visOptions(highlightNearest = list(enabled = T, hover = T), selectedBy = sel_by) %>%
     visNetwork::visLegend(addEdges = ledges, position = "right") %>%
-    return
+    return()
 }
 
 ##########################################################
@@ -486,6 +508,7 @@ get_summ_stats_plot <- function(vals, input){
   dat <- data.frame(sett = factor(),
                     meas = factor(),
                     val = numeric())
+  err <- FALSE
   for (i in vals$sett_names){
     mat <- getNZ(vals = vals, input = input, mat = vals$networks[[i]])
     mat <- get_subnet(vals = vals, mat = mat)
@@ -500,17 +523,17 @@ get_summ_stats_plot <- function(vals, input){
     dat <- rbind(dat, data.frame("sett" = i, "meas" = "Average Clustering Coefficient", "val" = igraph::transitivity(g, type = "average")))
 
     #When users input their own function
-    if(input$meas_butt != ""){
+    if(input$meas_butt != "" && isFALSE(err)){
       for(str in unlist(strsplit(input$meas_butt, ";"))){
         str <- trimws(str, which = "both")
         func <- unlist(strsplit(str, ","))
-
-        if(!exists(func[1], mode = "function")){
+        if(!exists(x = func[1], mode = "function", where = asNamespace('igraph'))){
+          shiny::showNotification(paste0("Could not find function ", func[1], " in package igraph"), type = "warning")
+          err <- TRUE
           next
         }
 
-        tot_func <- paste0(func[1], "(g")
-
+        tot_func <- paste0("igraph::", func[1], "(g")
         if(length(func) > 1){
           for(j in func[2:length(func)]){
             tot_func <- paste0(tot_func, ",", j)
@@ -525,7 +548,10 @@ get_summ_stats_plot <- function(vals, input){
           to_eval <- parse(text = tot_func)
           dat <- rbind(dat, data.frame("sett" = i, "meas" = func[[1]], "val" = eval(to_eval)))
         },
-        error = function(cond) NULL
+        error = function(cond) {
+          err <- TRUE
+          shiny::showNotification(paste0("Error: ", cond), type = "error", duration = NULL)
+        }
         )
         #to_eval <- parse(text = tot_func)
         #try(dat <- rbind(dat, data.frame("sett" = i, "meas" = func[[1]], "val" = eval(to_eval))), silent = TRUE)
@@ -700,6 +726,16 @@ mat_dist <- function(mat1, mat2, dist = "Euclidean", mat_type){
 apply_mat_dist_list <- function(vals, input, for_plot = FALSE){
   mat_list <- vals$networks
   names(mat_list) <- vals$sett_names
+  check_dims <- sapply(vals$networks, function(x) dim(x)[[2]])
+  if(length(unique(check_dims)) != 1){
+    shiny::showNotification("WARNING: Dimension of Networks Are Different. Only Common Nodes Will Be Used.", type = "warning", duration = NULL)
+    node_per_network <- lapply(vals$networks, function(x) dimnames(x)[[1]])
+    intersection <- Reduce(intersect, node_per_network)
+    for(i in 1:length(mat_list)){
+      ind <- which(dimnames(mat_list[[i]])[[2]] %in% intersection)
+      mat_list[[i]] <- mat_list[[i]][ind, ind]
+    }
+  }
   combis <- t(utils::combn(names(mat_list), 2))
 
   if(for_plot){

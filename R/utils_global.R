@@ -11,6 +11,8 @@ custom.col <- c("#DBB165",  "#52854C", "#4E84C4", "#C3D7A4","#C4961A", "#8B4513"
                 "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A", "#FFFF99",
                 "#B15928", "#FFD700", "#C5B358")
 
+###WARNING: #009E73 AND #1B9E77 ARE REALLY SIMILAR TO EACH OTHER
+
 # Custom bsModal that does not close when users click outside the dialog modal
 # or when users press the escape key
 custombsModal <- function(...) {
@@ -41,35 +43,31 @@ get_subnet <- function(vals, mat){
 getNZ <- function(vals, input, mat, diff = FALSE){
   shiny::validate(shiny::need(!is.null(mat), "Getting proper data"))
   mat <- Matrix::Matrix(mat)
-  n_nodes <- length(vals$node_names)
-
+  n_nodes <- dim(mat)[[2]]
   if(is.null(vals$n_traits)){
-
     if(!is.null(input$cor_t) && isFALSE(diff)){
-      mat[abs(mat) < input$cor_t] <- 0
+      #mat[abs(mat) < input$cor_t] <- 0
+      indic <- Matrix::which(abs(mat) < input$cor_t, arr.ind = TRUE)
+      mat[indic] <- 0
     }
     diag(mat) <- 0 #Makes diagonal values 0
-    mat <- Matrix::drop0(mat, tol = 0, is.Csparse = TRUE) #Returns sparse matrix with no explicit zeroes (including removing diagonal zeroes)
-    nzvec <- which(Matrix::colSums(mat != 0) == 0) #Gets indices of isolated nodes
-    mat <- mat[-nzvec, -nzvec]
+    mat <- Matrix::drop0(mat) #Returns sparse matrix with no explicit zeroes (including removing diagonal zeroes)
+    nzvec <- which(Matrix::colSums(mat) == 0) #Gets indices of isolated nodes
+    if(length(nzvec) > 0) mat <- mat[-nzvec, -nzvec]
     invisible(mat)
   }
 
   else{
-
     if (!is.null(input$cor_m) && isFALSE(diff)){
       mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
     }
-
     if (!is.null(input$cor_t) && isFALSE(diff)){
       mat[, 1:vals$n_traits][abs(mat[, 1:vals$n_traits]) < input$cor_t] <- 0
       mat[1:vals$n_traits, ][abs(mat[1:vals$n_traits, ]) < input$cor_t] <- 0
     }
-
     diag(mat) <- 0  #Makes diagonal values 0
-
-    mat <- Matrix::drop0(mat, tol = 0, is.Csparse = TRUE) #Returns sparse matrix with no explicit zeroes for opt.adj, thus removing diagonal 0 values
-    nzvec <- which(Matrix::colSums(mat != 0) == 0) #gets indices of traits and markers that do not have any links
+    mat <- Matrix::drop0(mat, tol = 0) #Returns sparse matrix with no explicit zeroes for opt.adj, thus removing diagonal 0 values
+    nzvec <- which(Matrix::colSums(mat) == 0) #gets indices of traits and markers that do not have any links
     nzvec <- nzvec[nzvec > vals$n_traits] #gets indices of only markers that do not have any links
     mat <- mat[-nzvec, -nzvec]
     invisible(mat)

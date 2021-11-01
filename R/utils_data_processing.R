@@ -177,6 +177,10 @@ map_nodes_to_group <- function(vals, input, trt_typs){
     map_nodes <- data.frame("node" = vals$node_names, "node_group" = c(rep("Trait", vals$n_traits), rep("Marker", n_markers)))
   }
 
+  if(isFALSE(input$gxe_mode) && !shiny::isTruthy(map_nodes)){
+    map_nodes <- data.frame("node" = vals$node_names, "node_group" = rep("none", length(vals$node_names)))
+  }
+
   if(isTruthy(map_nodes)){
     map_nodes <- map_nodes[, 1:2]
     bool_group_col <- length(unique(map_nodes[, 1])) < length(unique(map_nodes[, 2]))
@@ -202,7 +206,7 @@ map_nodes_to_group <- function(vals, input, trt_typs){
   return(map_nodes)
 }
 
-complete_df <- function(vals, df){
+complete_df <- function(vals){
   # If less unique values in first column, then first column contains groups for nodes, or vice versa
   #df <- as.data.frame(df)
   df <- as.data.frame(vals$map_nodes)

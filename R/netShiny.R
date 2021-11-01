@@ -38,9 +38,21 @@ netShiny <- function(Net.obj = NULL,
     else{
       sett_nms <- names(Net.obj)
     }
-
-    n_nodes <- dim(Net.obj[[1]])[[2]]
-    all_node_nms <- dimnames(Net.obj[[1]])[[2]]
+    for(i in 1:length(Net.obj)){
+      if(is.null(dimnames(Net.obj[[i]])[[1]])){
+        if(is.null(dimnames(Net.obj[[i]])[[2]])){
+          dimnames(Net.obj[[i]]) <- list(paste("Node", 1:nrow(Net.obj[[i]])), paste("Node", 1:nrow(Net.obj[[i]])))
+        }
+        else{
+          dimnames(Net.obj[[i]])[[1]] <- dimnames(Net.obj[[i]])[[2]]
+        }
+      }
+      else if(is.null(dimnames(Net.obj[[i]])[[2]])){
+        dimnames(Net.obj[[i]])[[2]] <- dimnames(Net.obj[[i]])[[1]]
+      }
+    }
+    n_nodes <- max(unlist(sapply(Net.obj, function(x) dim(x)[[1]])))
+    all_node_nms <- unique(unlist(lapply(Net.obj, function(x) dimnames(x)[[2]])))
     for(i in 1:length(Net.obj)){
       curr_nm <- sett_nms[i]
       if(dim(Net.obj[[curr_nm]])[[1]] == dim(Net.obj[[curr_nm]])[[2]]){
@@ -61,7 +73,7 @@ netShiny <- function(Net.obj = NULL,
     shinydashboard::sidebarMenu(id = "tabs",
                                 shinydashboard::menuItem("Networks", tabName = "networks", icon = shiny::icon("project-diagram")),
                                 shinydashboard::menuItem("Summary Statistics", tabName = "summ_stats", icon = shiny::icon("stats", lib = "glyphicon")),
-                                shinydashboard::menuItem("Weights Analysis", tabName = "net", icon = shiny::icon("bar-chart-o")),
+                                shinydashboard::menuItem("Weights Analysis", tabName = "net", icon = shiny::icon("chart-line")),
                                 shinydashboard::menuItem("Centrality Measures", tabName = "centrality", icon = shiny::icon("align-center")),
                                 shinydashboard::menuItem("Net Diffs", tabName = "differences", icon = shiny::icon("compress")),
                                 shinydashboard::menuItem("Community Detection", tabName = "comm_detect", icon = shiny::icon("chart-bar")),
@@ -70,15 +82,21 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::sliderInput(inputId = "cor_m", "Partial Correlations Markers", min = 0, max = 1, value = 0),
                                 shiny::selectInput("net1", "Left Panel", sett_nms, selected = sett_nms[1]),
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
-                                shiny::selectInput("layout", "Layout", c("Automatic", "DrL", "Fruchterman-Reingold", "Kamada-Kawai" = "kk", "Tree"), selected = "Automatic"),
+                                shiny::selectInput("layout", "Layout", c("Automatic",
+                                                                         "Circle",
+                                                                         "Fruchterman-Reingold",
+                                                                         "Grid.2D",
+                                                                         "Kamada-Kawai" = "kk",
+                                                                         "Tree"), selected = "Automatic"),
                                 shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
-                                shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("search"), btnReset = shiny::icon("remove"), width = "100%"),
+                                shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("search"), btnReset = shiny::icon("times"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
                                 shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = "Fast Greedy"),
                                 shiny::tags$head(
                                   shiny::tags$style(shiny::HTML('#subgraph{color:black; background-color:#F5F2F2}
+                                  #customize{color:black; background-color:#F5F2F2}
                                   #print_network{color:black; background-color:#F5F2F2}
                                   #refresh{color:black; background-color:#F5F2F2}'))
                                 ),
@@ -86,7 +104,8 @@ netShiny <- function(Net.obj = NULL,
                                                    shinyWidgets::actionBttn("subgraph", label = "subgraph", style = "simple", size = "sm"),
                                                    shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm"),
                                                    shinyWidgets::actionBttn("refresh", label = NULL, icon = shiny::icon("redo"), style = "simple", size = "sm")
-                                )
+                                ),
+                                shinyWidgets::actionBttn("customize", label = "customize", style = "simple", size = "sm")
 
     )
   )
@@ -304,7 +323,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    shiny::tags$h3("Plot Settings"),
                                                                    shiny::numericInput(inputId = "par_cor_bins", label = "Bins", min = 0, value = 15),
                                                                    shiny::numericInput(inputId = "par_cor_breaks", label = "X-axis Breaks", min = 0, value = 20),
-                                                                   circle = TRUE, status = "primary", icon = shiny::icon("gear"),
+                                                                   circle = TRUE, status = "primary", icon = shiny::icon("cog"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to change plot's settings")
                                                                  ),
                                                                  shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px")))
@@ -352,7 +371,7 @@ netShiny <- function(Net.obj = NULL,
 
                                   )
                                 ),
-                                circle = TRUE, status = "primary", icon = shiny::icon("gear"), inputId = "dropdown_res",
+                                circle = TRUE, status = "primary", icon = shiny::icon("cog"), inputId = "dropdown_res",
                                 tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                               ),
                               shinycssloaders::withSpinner(
@@ -374,7 +393,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::tags$h3("Plot Settings"),
                                 shinyWidgets::materialSwitch(inputId = "cen_meas_col_switch", label = "Color by Group", value = TRUE, status = "primary"),
                                 shiny::selectInput(inputId = "cen_meas_leg_pos", label = "Legend Position", choices = c("right", "left", "bottom", "top"), selected = "bottom"),
-                                circle = TRUE, status = "primary", icon = shiny::icon("gear"),
+                                circle = TRUE, status = "primary", icon = shiny::icon("cog"),
                                 tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                               ),
                               shinycssloaders::withSpinner(
@@ -394,7 +413,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          shiny::tags$h3("Table Settings"),
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_table", label = "", choices = list("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
                                                                                          shiny::selectInput(inputId = "dist_meas_table", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra", "Jaccard"), selected = "Euclidean"),
-                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
+                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
                                                                                        shinycssloaders::withSpinner(shiny::uiOutput("distances_table"))
@@ -407,7 +426,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_plot", label = "", choices = c("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
                                                                                          shiny::selectInput(inputId = "dist_meas_plot", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra", "Jaccard"), selected = "Euclidean", multiple = TRUE),
                                                                                          shiny::checkboxInput(inputId = "log_check", label = "Log Scale", value = FALSE),
-                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
+                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
                                                                                        shinycssloaders::withSpinner(shiny::plotOutput("distances_plot"))
@@ -447,7 +466,9 @@ netShiny <- function(Net.obj = NULL,
                                   coords = NULL,
                                   networks = Net.obj,
                                   mode = "gxe",
-                                  subgraph_nodes = NULL)
+                                  subgraph_nodes = NULL,
+                                  nodes_to_change = NULL,
+                                  color_custom = NULL)
 
     # Show the model on start up ...
     if(is.null(Net.obj) || isTRUE(to_reconstruct)){
@@ -457,7 +478,7 @@ netShiny <- function(Net.obj = NULL,
         #####DISABLE THE BUTTONS FOR HEADER, QUOTE, AND SEP, AND ENABLE THEM IFF USER UPLOAD NEW FILES#####
       }
       else{
-        shinyjs::disable("nextButton startup")
+        shinyjs::disable("nextButton_startup")
       }
       shinyBS::toggleModal(session = session, modalId = "modalStartup_step1", toggle = "open")
     }
@@ -474,7 +495,10 @@ netShiny <- function(Net.obj = NULL,
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
     #right panel network
-    shiny::observeEvent(c(input$cor_t,
+    shiny::observeEvent(c(input$color_apply,
+                          input$font_apply,
+                          input$size_apply,
+                          input$cor_t,
                           input$cor_m,
                           input$net1,
                           input$net2,
@@ -489,47 +513,36 @@ netShiny <- function(Net.obj = NULL,
                             mat_f2 <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
                             mat_f@x[abs(mat_f@x) > 0] <- 1
                             mat_f2@x[abs(mat_f2@x) > 0] <- 1
-                            if(!is.null(input$nodes_subgraph)){
-                              # ind_subgraph_nodes <- which(dimnames(mat_f)[[2]] %in% input$nodes_subgraph)
-                              # summ_df <- summary(mat_f)
-                              # summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
-                              # nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
-                              # nms_subgraph_nodes <- dimnames(mat_f)[[2]][nms_subgraph_nodes]
-                              # mat_f <- mat_f[nms_subgraph_nodes, nms_subgraph_nodes]
-                              mat_f <- get_subnet(vals = vals, mat = mat_f)
-
-                              # ind_subgraph_nodes <- which(dimnames(mat_f2)[[2]] %in% input$nodes_subgraph)
-                              # summ_df <- summary(mat_f2)
-                              # summ_df <- summ_df[summ_df$i %in% ind_subgraph_nodes | summ_df$j %in% ind_subgraph_nodes, ]
-                              # nms_subgraph_nodes <- sort(union(summ_df$i, summ_df$j))
-                              # nms_subgraph_nodes <- dimnames(mat_f2)[[2]][nms_subgraph_nodes]
-                              # mat_f2 <- mat_f2[nms_subgraph_nodes, nms_subgraph_nodes]
-                              mat_f2 <- get_subnet(vals = vals, mat = mat_f2)
-                            }
-                            g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
-                            g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
-                            attrs <- unique(rbind(igraph::as_data_frame(g_f, "vertices"), igraph::as_data_frame(g_f2, "vertices")))
-                            el <- rbind(igraph::as_data_frame(g_f), igraph::as_data_frame(g_f2))
-                            g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
-                            if(input$layout == "Tree"){
-                              lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
-                            }
-                            else if(input$layout == "kk"){
-                              lay <- igraph::layout_with_kk(g_f)
-                            }
-                            else if(input$layout == "Fruchterman-Reingold"){
-                              lay <- igraph::layout_with_fr(g_f, weights = NULL)
-                            }
-                            else if(input$layout == "DrL"){
-                              #isolated <- which(degree(g_f) == 0)
-                              #print(isolated)
-                              #g_f_ni <- delete.vertices(g_f, isolated)
-                              #lay <- layout_with_drl(g_f_ni, weights = NULL)
-                              lay <- igraph::layout_nicely(g_f, weights = NULL)
-                            }
-                            else{
-                              lay <- igraph::layout_nicely(g_f, weights = NULL)
-                            }
+                            set.seed(vals$rseed)
+                            withr::with_seed(vals$rseed, {
+                              if(!is.null(input$nodes_subgraph)){
+                                mat_f <- get_subnet(vals = vals, mat = mat_f)
+                                mat_f2 <- get_subnet(vals = vals, mat = mat_f2)
+                              }
+                              g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
+                              g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
+                              attrs <- unique(rbind(igraph::as_data_frame(g_f, "vertices"), igraph::as_data_frame(g_f2, "vertices")))
+                              el <- rbind(igraph::as_data_frame(g_f), igraph::as_data_frame(g_f2))
+                              g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
+                              if(input$layout == "Tree"){
+                                lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
+                              }
+                              else if(input$layout == "kk"){
+                                lay <- igraph::layout_with_kk(g_f)
+                              }
+                              else if(input$layout == "Fruchterman-Reingold"){
+                                lay <- igraph::layout_with_fr(g_f, weights = NULL)
+                              }
+                              else if(input$layout == "Circle"){
+                                lay <- igraph::layout_in_circle(g_f)
+                              }
+                              else if(input$layout == "Grid.2D"){
+                                lay <- igraph::layout_on_grid(g_f, dim = 2)
+                              }
+                              else{
+                                lay <- igraph::layout_nicely(g_f, weights = NULL)
+                              }
+                            })
                             row.names(lay) <- names(igraph::V(g_f))
                             vals$coords <- lay
                           })
@@ -539,7 +552,7 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent({input$click}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shinydashboard::updateTabItems(session, "tabs", selected = "net")
-      nz_nodes <- get_nz_nodes(vals = vals, input = input, mat = vals$networks[[1]])
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shiny::updateSelectInput(session, "marker", selected = input$click, choices = c(input$click, nz_nodes))
     })
 
@@ -625,7 +638,7 @@ netShiny <- function(Net.obj = NULL,
     #And shows them when we switch back to the networks tab
     shiny::observeEvent(c(input$tabs, input$tabs_summ_stats, input$tab_differences, input$tabs_comm_detect), {
       controls <- c("cor_t", "cor_m", "net1", "net2", "layout", "roundness", "refresh", "print_network", "subgraph",
-                    "sets_selin", "marker", "meas_butt", "cluster_algs")
+                    "sets_selin", "marker", "meas_butt", "cluster_algs", "customize")
 
       if(input$tabs == "networks"){
         shiny::updateSelectInput(session, "net1", label = "Left Panel")
@@ -717,7 +730,7 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$subgraph, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      all_nodes <- get_nz_nodes(mat = vals$networks[[1]], vals = vals, input = input)
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       if(vals$mode == "gxe"){
         dialog_title <- "Select Markers/Traits for Subgraph"
       }
@@ -745,6 +758,100 @@ netShiny <- function(Net.obj = NULL,
       ))
     })
 
+    shiny::observeEvent(input$customize, {
+      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      if(vals$mode == "gxe"){
+        dialog_title <- "Select Markers/Traits to Customize"
+      }
+      else{
+        dialog_title <- "Select Nodes to Customize"
+      }
+
+      shiny::showModal(shiny::modalDialog(
+        size = "s",
+        list(shiny::h3(dialog_title),
+             shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
+             shiny::splitLayout(cellWidths = rep("33%", 3),
+               shiny::actionButton(inputId = "clear_nodes", label = "Clear All"),
+               if(vals$mode == "gxe") shiny::actionButton(inputId = "all_traits", label = "All Traits"),
+               if(vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers"),
+               ),
+             shiny::splitLayout(
+               colourpicker::colourInput("color_custom", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "color_apply", label = "apply"))
+               ),
+             shiny::splitLayout(
+               shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL),
+               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
+             ),
+             shiny::splitLayout(
+               shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL),
+               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
+             )
+             ),
+        footer = shiny::tagList(
+          shiny::actionButton("reset_custom", "Reset to Default"),
+          shiny::modalButton("Close")
+        )
+      ))
+    })
+
+    shiny::observeEvent(input$color_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$color_custom)){
+        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
+        vals$map_nodes$node_color[vec_change] <- rep(input$color_custom, length(vec_change))
+      }
+    })
+
+    shiny::observeEvent(input$size_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$size_custom)){
+        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
+        if(!shiny::isTruthy(vals$map_nodes$node_size)){
+          if(vals$mode == "gxe"){
+            vals$map_nodes$node_size <- c(rep(30, vals$n_traits), rep(20, nrow(vals$map_nodes) - vals$n_traits))
+          }
+          else{
+            vals$map_nodes$node_size <- rep(25, nrow(vals$map_nodes))
+          }
+        }
+        vals$map_nodes$node_size[vec_change] <- rep(input$size_custom, length(vec_change))
+      }
+    })
+
+    shiny::observeEvent(input$font_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_custom)){
+        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
+        if(!shiny::isTruthy(vals$map_nodes$font_size)){
+          vals$map_nodes$font_size <- rep(17, length(vals$map_nodes$node))
+        }
+        vals$map_nodes$font_size[vec_change] <- rep(input$font_custom, length(vec_change))
+      }
+    })
+
+    shiny::observeEvent(input$clear_nodes, {
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      vals$nodes_to_change <- vector()
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = character(0))
+    })
+
+    shiny::observeEvent(input$all_traits, {
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[1:vals$n_traits])
+    })
+
+    shiny::observeEvent(input$all_markers, {
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[vals$n_traits+1:length(all_nodes)])
+    })
+
+    shiny::observeEvent(input$reset_custom, {
+      vals$map_nodes$node_color <- vals$original_colors
+      vals$map_nodes$node_size <- NULL
+      vals$map_nodes$font_size <- NULL
+
+    })
+
     shiny::observeEvent(input$ok_sel_nodes, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       vals$subgraph_nodes <- input$nodes_subgraph
@@ -753,14 +860,14 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$reset_sel_nodes, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      all_nodes <- get_nz_nodes(mat = vals$networks[[1]], vals = vals, input = input)
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shinyWidgets::updatePrettyCheckboxGroup(session, inputId = "nodes_subgraph", label = NULL, choices = all_nodes, selected = NULL)
     })
 
     #output for the left panel network
     output$network_proxy_nodes <- visNetwork::renderVisNetwork({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
+      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
       mat <- get_subnet(vals = vals, mat = mat)
@@ -774,7 +881,7 @@ netShiny <- function(Net.obj = NULL,
     #Output for the right panel network
     output$network_proxy_nodes_2 <- visNetwork::renderVisNetwork({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
+      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
       mat <- get_subnet(vals = vals, mat = mat)
@@ -1148,7 +1255,8 @@ netShiny <- function(Net.obj = NULL,
       args_net <- paste("net_", args_netphenogeno[-1], "_start", sep = "")
       args_sel <- paste("sel_", args_selectnet, "_start", sep = "")
       args_all <- c(args_net, args_sel, "sel_net_tag", "startup_run", "prevButton_reconstruction")
-      vals$node_names <- colnames(uploadedFiles$files[[1]])
+      #vals$node_names <- colnames(uploadedFiles$files[[1]])
+      vals$node_names <- unique(unlist(lapply(uploadedFiles$files, function(x) dimnames(x)[[2]])))
       sapply(c(args_all, "net_method_start", "file_names", "adv_op"), shinyjs::disable)
 
       args <- get_args_recon(input = input, start_up = TRUE)
@@ -1180,7 +1288,6 @@ netShiny <- function(Net.obj = NULL,
       else if (length(net_names) < length(vals$networks)){
         vect_err <- append(vect_err, "Too few network names given")
       }
-
       #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
       if(isTRUE(input$gxe_mode)){
         #Check if number of traits passed is correct
@@ -1209,7 +1316,6 @@ netShiny <- function(Net.obj = NULL,
           }
         }
       }
-
       #Check if we have any error and show a notification about the error(s)
       if(length(vect_err) != 0){
         shiny::showNotification(paste(vect_err, collapse = "\n"), type = "error")
@@ -1223,17 +1329,17 @@ netShiny <- function(Net.obj = NULL,
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
-
         vals$map_nodes <- map_nodes_to_group(vals = vals, input = input, trt_typs = trt_typs)
         vals$map_nodes <- complete_df(vals = vals)
-
+        vals$original_colors <- vals$map_nodes$node_color
         #Get all the names of the markers that have at least one connections
         #with any other marker (or trait)
-        av_mks <- unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input))
-        av_mks <- unique(av_mks)
+        #av_mks <- unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input))
+        #av_mks <- unique(av_mks)
+        #av_mks <- av_mks[order(match(av_mks, vals$node_names))]
+        av_mks <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
         av_mks <- av_mks[order(match(av_mks, vals$node_names))]
         shiny::updateSelectInput(session, "marker", choices = av_mks)
-
         shinyBS::toggleModal(session = session, modalId = "data_settings", toggle = "close")
         shinyjs::disable("gxe_mode")
       }
@@ -1282,10 +1388,11 @@ netShiny <- function(Net.obj = NULL,
           shiny::isolate(shiny::updateTextInput(inputId = "net_names", label = "Network Names", value = paste(vals$sett_names, collapse = ", ")))
         }
         shiny::isolate(shinyjs::hide("cor_m"))
-        min_slider <- round(min(unlist(lapply(vals$networks, min))), 2)
-        max_slider <- round(max(unlist(lapply(vals$networks, max))), 2)
-        shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = min_slider, max = max_slider, label = "Weights Values"))
-
+        nets <- lapply(vals$networks, function(x){diag(x) <- 0; x})
+        nets <- lapply(nets, Matrix::drop0, tol = 0, is.Csparse = TRUE)
+        max_slider <- round(max(unlist(lapply(nets, max))), 2)
+        shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = 0, max = max_slider, label = "Weights Values"))
+        shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Node"))
       }
       else{
         shinyjs::show(id = "n_traits")
@@ -1299,6 +1406,7 @@ netShiny <- function(Net.obj = NULL,
         }
         shiny::isolate(shinyjs::show("cor_m"))
         shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = 0, max = 1, label = "Partial Correlations Traits"))
+        shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Marker"))
       }
     })
 
