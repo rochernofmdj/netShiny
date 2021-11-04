@@ -434,7 +434,7 @@ netShiny <- function(Net.obj = NULL,
                                                                  )
                                                  ),
                                                  shiny::tabPanel("Nodes Sets",
-                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets"))),
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")))
                               )
       )
     )
