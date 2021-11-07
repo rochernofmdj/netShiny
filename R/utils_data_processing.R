@@ -63,7 +63,7 @@ perform_startup_recon <- function(val_nets, files, l_args) {
   }
   shiny::withProgress(message = "Reconstructing Networks", value = 0, {
     for (i in 1:len_files) {
-      curr_name <- tools::file_path_sans_ext(nms[[i]])
+      curr_name <- paste0(tools::file_path_sans_ext(nms[[i]]), "_", l_args[["net_method_start"]])
       shiny::incProgress(1/len_files, detail = paste("Reconstructing Network", curr_name))
       if(curr_name %in% names(val_nets)){
         shiny::showNotification(paste("File with name ", curr_name, "has already been reconstructed. \n", "Skipping."), type = "warning")

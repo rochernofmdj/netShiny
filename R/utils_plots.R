@@ -96,6 +96,7 @@ get_igraph_lay <- function(vals, input, mat){
 # This function takes in a (sparse) matrix, igraph object, and layout dataframe
 # and returns a visnetwork
 get_vis_net <- function(vals, input, mat, g, lay){
+  shiny::validate(shiny::need(!is.null(vals$map_nodes$node), "Getting proper data"))
   sel_nodes <- dimnames(mat)[[1]]
   test.visn <- visNetwork::toVisNetworkData(g)
   sel_by <- NULL
@@ -823,9 +824,11 @@ comm_detection_plot <- function(vals, input, setting){
       try(c1 <- igraph::cluster_edge_betweenness(g))
     }
 
+    row_lay <- rownames(lay)
+    row_coords <- rownames(vals$coords)
     for (i in 1:nrow(lay)){
-      if(is.element(rownames(lay)[i], rownames(vals$coords))){
-        lay[rownames(lay)[i], ] <- vals$coords[rownames(lay)[i], ]
+      if(is.element(row_lay[i], row_coords)){
+        lay[row_lay[i], ] <- vals$coords[row_lay[i], ]
       }
     }
 

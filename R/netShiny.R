@@ -190,6 +190,7 @@ netShiny <- function(Net.obj = NULL,
                     )
                   ),
                   shiny::tags$head(shiny::tags$style("#modalStartup_reconstruction .modal-footer{ display:none}"))),
+    ##nothing2 needs to be removed
     custombsModal("startup_mapping", "File for Mapping of Nodes", "nothing2", size = "large",
                   shiny::fileInput("mapping_upload", "Choose File for Mapping",
                                    multiple = FALSE,
@@ -866,9 +867,10 @@ netShiny <- function(Net.obj = NULL,
 
     #output for the left panel network
     output$network_proxy_nodes <- visNetwork::renderVisNetwork({
-      if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
+      if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(!is.null(vals$map_nodes$node), "Getting proper data"))
+      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
       mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
@@ -880,16 +882,16 @@ netShiny <- function(Net.obj = NULL,
 
     #Output for the right panel network
     output$network_proxy_nodes_2 <- visNetwork::renderVisNetwork({
-      if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
+      if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(!is.null(vals$map_nodes$node), "Getting proper data"))
+      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
       mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
       g <- get_g_complete(vals = vals, mat = mat)
       lay <- get_igraph_lay(vals = vals, input = input, mat = mat)
       vis_net <- get_vis_net(vals = vals, input = input, mat = mat, g = g, lay = lay)
-
       vis_net
     })
 
@@ -955,6 +957,7 @@ netShiny <- function(Net.obj = NULL,
 
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
       net <- getDif(vals = vals, input = input)
       net
     })
@@ -1225,11 +1228,11 @@ netShiny <- function(Net.obj = NULL,
       }
 
       else{
-        vals$map_nodes <- mapping
+        vals$map_nodes_init <- mapping
       }
 
       DT::datatable(
-        vals$map_nodes,
+        vals$map_nodes_init,
         filter = 'none', extensions = c('Scroller'),
         options = list(scrollY = 250,
                        scrollX = 650,
@@ -1273,6 +1276,7 @@ netShiny <- function(Net.obj = NULL,
     })
 
     shiny::observeEvent(input$nextButton_mapping, {
+      vals$map_nodes <- vals$map_nodes_init
       shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "close")
     })
 
