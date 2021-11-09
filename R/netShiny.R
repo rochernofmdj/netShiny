@@ -319,7 +319,7 @@ netShiny <- function(Net.obj = NULL,
       shinydashboard::tabItem(tabName = "summ_stats",
                               shiny::tabsetPanel(id = "tabs_summ_stats",
                                                  shiny::tabPanel("Metrics", shinycssloaders::withSpinner(shiny::plotOutput("summary_statistics", height = "750px"))),
-                                                 shiny::tabPanel("Partial Correlations",
+                                                 shiny::tabPanel(title = shiny::textOutput("title_par_cors"),
                                                                  shinyWidgets::dropdownButton(
                                                                    shiny::tags$h3("Plot Settings"),
                                                                    shiny::numericInput(inputId = "par_cor_bins", label = "Bins", min = 0, value = 15),
@@ -914,6 +914,16 @@ netShiny <- function(Net.obj = NULL,
         p
       }
     }, bg = "#F5F2F2")
+
+    output$title_par_cors <- shiny::renderText({
+      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      if(vals$mode == "gxe"){
+        paste0("Partial Correlations")
+      }
+      else{
+        paste0("Weights")
+      }
+    })
 
     #Output plot for weights analysis tab
     output$net_plot <- plotly::renderPlotly({
