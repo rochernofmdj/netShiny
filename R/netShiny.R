@@ -82,13 +82,13 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::sliderInput(inputId = "cor_m", "Partial Correlations Markers", min = 0, max = 1, value = 0),
                                 shiny::selectInput("net1", "Left Panel", sett_nms, selected = sett_nms[1]),
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
-                                shiny::selectInput("layout", "Layout", c("Automatic",
-                                                                         "Circle",
-                                                                         "Fruchterman-Reingold",
-                                                                         "Grid.2D",
-                                                                         "Kamada-Kawai" = "kk",
-                                                                         "Tree"), selected = "Automatic"),
-                                shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
+                                # shiny::selectInput("layout", "Layout", c("Automatic",
+                                #                                          "Circle",
+                                #                                          "Fruchterman-Reingold",
+                                #                                          "Grid.2D",
+                                #                                          "Kamada-Kawai" = "kk",
+                                #                                          "Tree"), selected = "Automatic"),
+                                # shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("search"), btnReset = shiny::icon("times"), width = "100%"),
@@ -100,10 +100,10 @@ netShiny <- function(Net.obj = NULL,
                                   #print_network{color:black; background-color:#F5F2F2}
                                   #refresh{color:black; background-color:#F5F2F2}'))
                                 ),
-                                shiny::splitLayout(cellWidths = c("45%", "22%", "22%"),
+                                shiny::splitLayout(cellWidths = c("50%", "50%"),
                                                    shinyWidgets::actionBttn("subgraph", label = "subgraph", style = "simple", size = "sm"),
-                                                   shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm"),
-                                                   shinyWidgets::actionBttn("refresh", label = NULL, icon = shiny::icon("redo"), style = "simple", size = "sm")
+                                                   shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm")#,
+                                                   #shinyWidgets::actionBttn("refresh", label = NULL, icon = shiny::icon("redo"), style = "simple", size = "sm")
                                 ),
                                 shinyWidgets::actionBttn("customize", label = "customize", style = "simple", size = "sm")
 
@@ -469,7 +469,9 @@ netShiny <- function(Net.obj = NULL,
                                   mode = "gxe",
                                   subgraph_nodes = NULL,
                                   nodes_to_change = NULL,
-                                  color_custom = NULL)
+                                  color_custom = NULL,
+                                  layout = "Automatic",
+                                  roundness = 0)
 
     # Show the model on start up ...
     if(is.null(Net.obj) || isTRUE(to_reconstruct)){
@@ -492,6 +494,10 @@ netShiny <- function(Net.obj = NULL,
       shinyjs::disable("dropdown_res")
     }
 
+    shinyjs::hide(id = "roots")
+    shinyjs::hide(id = "tree_layout_text")
+    shinyjs::hide(id = "ok_tree")
+
     #reactive value that reacts when when either the data for environements are changed, or
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
@@ -503,7 +509,7 @@ netShiny <- function(Net.obj = NULL,
                           input$cor_m,
                           input$net1,
                           input$net2,
-                          input$roundness,
+                          vals$roundness,
                           input$ok_sel_nodes,
                           vals$tree_root,
                           vals$rseed,
@@ -525,19 +531,25 @@ netShiny <- function(Net.obj = NULL,
                               attrs <- unique(rbind(igraph::as_data_frame(g_f, "vertices"), igraph::as_data_frame(g_f2, "vertices")))
                               el <- rbind(igraph::as_data_frame(g_f), igraph::as_data_frame(g_f2))
                               g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
-                              if(input$layout == "Tree"){
-                                lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
+                              if(vals$layout == "Tree"){
+                                if(all(vals$tree_root %in% igraph::V(g_f)$name)){
+                                  lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
+                                }
+                                else{
+                                  shiny::showNotification("Some of the inputted nodes are missing from one of current networks", type = "error")
+                                  return(NULL)
+                                }
                               }
-                              else if(input$layout == "kk"){
+                              else if(vals$layout == "kk"){
                                 lay <- igraph::layout_with_kk(g_f)
                               }
-                              else if(input$layout == "Fruchterman-Reingold"){
+                              else if(vals$layout == "Fruchterman-Reingold"){
                                 lay <- igraph::layout_with_fr(g_f, weights = NULL)
                               }
-                              else if(input$layout == "Circle"){
+                              else if(vals$layout == "Circle"){
                                 lay <- igraph::layout_in_circle(g_f)
                               }
-                              else if(input$layout == "Grid.2D"){
+                              else if(vals$layout == "Grid.2D"){
                                 lay <- igraph::layout_on_grid(g_f, dim = 2)
                               }
                               else{
@@ -577,38 +589,36 @@ netShiny <- function(Net.obj = NULL,
       }
     })
 
-    #Function that controls popup for when tree layout is chosen
-    layoutModal <- function(failed = FALSE) {
-      shiny::modalDialog(
-        shiny::textInput("roots", "Choose node(s) to make root:",
-                         placeholder = 'Use node\'s name or node\'s index'
-        ),
-        shiny::span('(If choosing multiple roots, separate by space)'),
-        if (failed)
-          shiny::div(shiny::tags$b("Invalid input", style = "color: red;")),
-
-        footer = shiny::tagList(
-          shiny::actionButton("cancel", "Cancel"),
-          shiny::actionButton("ok", "OK")
-        )
-      )
-    }
-
-    #This code makes sures that layout is changed accordingly to layout chosen
+    #This code makes sure that layout is changed accordingly to layout chosen
     shiny::observeEvent({input$layout}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       if(input$layout == "Tree"){
-        shiny::showModal(layoutModal())
+        shinyjs::show(id = "roots")
+        shinyjs::show(id = "tree_layout_text")
+        shinyjs::show(id = "ok_tree")
       }
       else{
+        shinyjs::hide(id = "roots")
+        shinyjs::hide(id = "tree_layout_text")
+        shinyjs::hide(id = "ok_tree")
         vals$tree_root <- c(" ", vals$tree_root)
+      }
+    })
+
+    shiny::observeEvent(c(input$layout, input$roundness), {
+      if(shiny::isTruthy(input$layout)){
+        vals$layout <- input$layout
+      }
+
+      if(shiny::isTruthy(input$roundness)){
+        vals$roundess <- input$roundness
       }
     })
 
     #When ok is clicked on the popup, check if input is valid
     #then change the layout of the netowork to tree, else show another
     #popup saying that input was invalid
-    shiny::observeEvent(input$ok, {
+    shiny::observeEvent(input$ok_tree, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       rts_inp <- strsplit(input$roots, "\\s+")[[1]]
       ind <- !anyNA(as.numeric(rts_inp))
@@ -616,16 +626,14 @@ netShiny <- function(Net.obj = NULL,
         rts_inp <- vals$node_names[as.numeric(rts_inp)]
       }
 
-      if (anyNA(rts_inp) | !all(rts_inp %in% vals$node_names)){
-        shiny::showModal(layoutModal(failed = TRUE))
+      if(anyNA(rts_inp) | !all(rts_inp %in% vals$node_names)){
+        shiny::showNotification("Error Choosing Root Nodes: Invalid Format", type = "error", duration = NULL)
       }
-      else if (length(rts_inp) == 0){
-        shiny::isolate(shiny::updateSelectInput(session, "layout", selected = "Automatic"))
-        shiny::removeModal()
+      else if(length(rts_inp) == 0){
+        shiny::showNotification("Error Choosing Root Nodes: Invalid Format", type = "error", duration = NULL)
       }
       else{
         vals$tree_root <- rts_inp
-        shiny::removeModal()
       }
     })
 
@@ -772,27 +780,43 @@ netShiny <- function(Net.obj = NULL,
       shiny::showModal(shiny::modalDialog(
         size = "s",
         list(shiny::h3(dialog_title),
-             shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
-             shiny::splitLayout(cellWidths = rep("33%", 3),
-               shiny::actionButton(inputId = "clear_nodes", label = "Clear All"),
-               if(vals$mode == "gxe") shiny::actionButton(inputId = "all_traits", label = "All Traits"),
-               if(vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers"),
-               ),
-             shiny::splitLayout(
-               colourpicker::colourInput("color_custom", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
-               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "color_apply", label = "apply"))
-               ),
-             shiny::splitLayout(
-               shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL),
-               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
-             ),
-             shiny::splitLayout(
-               shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL),
-               shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
+             shinyBS::bsCollapse(id = "collapseCustomize", open = "Nodes",
+                                 shinyBS::bsCollapsePanel("Nodes",
+                                                          shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
+                                                          shiny::splitLayout(cellWidths = rep("33%", 3),
+                                                                             shiny::actionButton(inputId = "clear_nodes", label = "Clear All"),
+                                                                             if(vals$mode == "gxe") shiny::actionButton(inputId = "all_traits", label = "All Traits"),
+                                                                             if(vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers"),
+                                                          ),
+                                                          shiny::splitLayout(
+                                                            colourpicker::colourInput("color_custom", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "color_apply", label = "apply"))
+                                                          ),
+                                                          shiny::splitLayout(
+                                                            shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
+                                                          ),
+                                                          shiny::splitLayout(
+                                                            shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
+                                                          ),
+                                                          shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
+                                                          style = "primary"),
+                                 shinyBS::bsCollapsePanel("Edges",
+                                                          shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
+                                                          style = "primary"),
+                                 shinyBS::bsCollapsePanel("Layout",
+                                                          shiny::selectInput("layout", "Layout Algorithm",
+                                                                             c("Automatic", "Circle", "Fruchterman-Reingold", "Grid.2D", "Kamada-Kawai" = "kk", "Tree"),
+                                                                             selected = vals$layout),
+                                                          shiny::textInput(inputId = "roots", label = "Choose node(s) to make root", placeholder = "Use node\'s name or node\'s index", value = paste0(vals$tree_root)),
+                                                          shiny::p(id = "tree_layout_text", "If choosing multiple roots, separate by space"),
+                                                          shiny::actionButton(inputId = "ok_tree", label = "OK"),
+                                                          shiny::actionButton(inputId = "refresh", label = "Change Seed"),
+                                                          style = "primary")
              )
-             ),
+        ),
         footer = shiny::tagList(
-          shiny::actionButton("reset_custom", "Reset to Default"),
           shiny::modalButton("Close")
         )
       ))

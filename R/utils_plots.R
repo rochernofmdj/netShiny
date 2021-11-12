@@ -76,7 +76,7 @@ get_igraph_lay <- function(vals, input, mat){
     }
   }
   # Make sure that isolated nodes are not too far away from the rest of the nodes
-  if (shiny::isolate(input$layout == "Tree")){
+  if (shiny::isolate(vals$layout == "Tree")){
     s <- which(igraph::degree(g_lay) == 0)
     s <- names(s)
     lay_y <- sort(vals$coords[, 2])
@@ -137,7 +137,7 @@ get_vis_net <- function(vals, input, mat, g, lay){
     visNetwork::visOptions(highlightNearest = list(enabled = T, hover = T), selectedBy = sel_by) %>%
     visNetwork::visInteraction(multiselect = TRUE) %>%
     visNetwork::visEvents(doubleClick =  "function(nodes){Shiny.onInputChange('click', nodes.nodes[0]);;}") %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "curvedCCW", roundness = input$roundness)) %>%
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "curvedCCW", roundness = vals$roundness)) %>%
     return()
 }
 
@@ -838,7 +838,7 @@ comm_detection_plot <- function(vals, input, setting){
     }
 
     p <- plot(c1, g, layout = cbind(lay[, 1], -1 * lay[, 2]), vertex.shape = "fcircle",
-              edge.curved = input$roundness)
+              edge.curved = vals$roundness)
   })
   return(p)
 }
