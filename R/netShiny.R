@@ -494,10 +494,6 @@ netShiny <- function(Net.obj = NULL,
       shinyjs::disable("dropdown_res")
     }
 
-    shinyjs::hide(id = "roots")
-    shinyjs::hide(id = "tree_layout_text")
-    shinyjs::hide(id = "ok_tree")
-
     #reactive value that reacts when when either the data for environements are changed, or
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
@@ -596,6 +592,7 @@ netShiny <- function(Net.obj = NULL,
         shinyjs::show(id = "roots")
         shinyjs::show(id = "tree_layout_text")
         shinyjs::show(id = "ok_tree")
+
       }
       else{
         shinyjs::hide(id = "roots")
@@ -770,16 +767,9 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$customize, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
-      if(vals$mode == "gxe"){
-        dialog_title <- "Select Markers/Traits to Customize"
-      }
-      else{
-        dialog_title <- "Select Nodes to Customize"
-      }
-
       shiny::showModal(shiny::modalDialog(
         size = "s",
-        list(shiny::h3(dialog_title),
+        list(shiny::h3("Customize Networks"),
              shinyBS::bsCollapse(id = "collapseCustomize", open = "Nodes",
                                  shinyBS::bsCollapsePanel("Nodes",
                                                           shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
@@ -801,6 +791,10 @@ netShiny <- function(Net.obj = NULL,
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
                                                           ),
                                                           shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
+                                                          shiny::hr(),
+                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_markers",label = "Hide Isolated Markers", value = TRUE, status = "success", right = TRUE),
+                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_traits",label = "Hide Isolated Traits", value = FALSE, status = "success", right = TRUE),
+                                                          shinyjs::hidden(shinyWidgets::materialSwitch(inputId = "hide_iso_nodes",label = "Hide Isolated Nodes", value = TRUE, status = "success", right = TRUE)),
                                                           style = "primary"),
                                  shinyBS::bsCollapsePanel("Edges",
                                                           shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
@@ -820,6 +814,28 @@ netShiny <- function(Net.obj = NULL,
           shiny::modalButton("Close")
         )
       ))
+
+      if(vals$mode == "gxe"){
+        shinyjs::show(id = "hide_iso_traits")
+        shinyjs::show(id = "hide_iso_markers")
+        shinyjs::hide(id = "hide_iso_nodes")
+      }
+      else{
+        shinyjs::hide(id = "hide_iso_traits")
+        shinyjs::hide(id = "hide_iso_markers")
+        shinyjs::show(id = "hide_iso_nodes")
+      }
+
+      if(vals$layout == "Tree"){
+        shinyjs::show(id = "roots")
+        shinyjs::show(id = "tree_layout_text")
+        shinyjs::show(id = "ok_tree")
+      }
+      else{
+        shinyjs::hide(id = "roots")
+        shinyjs::hide(id = "tree_layout_text")
+        shinyjs::hide(id = "ok_tree")
+      }
     })
 
     shiny::observeEvent(input$color_apply, {
