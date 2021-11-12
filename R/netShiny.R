@@ -100,12 +100,11 @@ netShiny <- function(Net.obj = NULL,
                                   #print_network{color:black; background-color:#F5F2F2}
                                   #refresh{color:black; background-color:#F5F2F2}'))
                                 ),
-                                shiny::splitLayout(cellWidths = c("50%", "50%"),
-                                                   shinyWidgets::actionBttn("subgraph", label = "subgraph", style = "simple", size = "sm"),
-                                                   shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm")#,
-                                                   #shinyWidgets::actionBttn("refresh", label = NULL, icon = shiny::icon("redo"), style = "simple", size = "sm")
-                                ),
-                                shinyWidgets::actionBttn("customize", label = "customize", style = "simple", size = "sm")
+                                shiny::splitLayout(cellWidths = c("28%", "28%", "28%"),
+                                                   shinyWidgets::actionBttn("subgraph", label = "subnet", style = "simple", size = "sm", block = TRUE),
+                                                   shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm", block = TRUE),
+                                                   shinyWidgets::actionBttn("customize", label = "", icon = icon("cogs"), style = "simple", size = "sm", block = TRUE)
+                                )
 
     )
   )
@@ -413,7 +412,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                        shinyWidgets::dropdownButton(
                                                                                          shiny::tags$h3("Table Settings"),
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_table", label = "", choices = list("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
-                                                                                         shiny::selectInput(inputId = "dist_meas_table", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra", "Jaccard"), selected = "Euclidean"),
+                                                                                         shiny::selectInput(inputId = "dist_meas_table", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra"), selected = "Euclidean"),
                                                                                          circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
@@ -425,7 +424,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                        shinyWidgets::dropdownButton(
                                                                                          shiny::tags$h3("Plot Settings"),
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_plot", label = "", choices = c("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
-                                                                                         shiny::selectInput(inputId = "dist_meas_plot", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra", "Jaccard"), selected = "Euclidean", multiple = TRUE),
+                                                                                         shiny::selectInput(inputId = "dist_meas_plot", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra"), selected = "Euclidean", multiple = TRUE),
                                                                                          shiny::checkboxInput(inputId = "log_check", label = "Log Scale", value = FALSE),
                                                                                          circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
@@ -938,10 +937,12 @@ netShiny <- function(Net.obj = NULL,
     output$summary_statistics <- shiny::renderPlot({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      if(shiny::isTruthy(input$cor_m)){
-        p <- get_summ_stats_plot(vals = vals, input = input)
-        p
-      }
+      p <- get_summ_stats_plot(vals = vals, input = input)
+      p
+      # if(shiny::isTruthy(input$cor_m)){
+      #   p <- get_summ_stats_plot(vals = vals, input = input)
+      #   p
+      # }
 
     })
 

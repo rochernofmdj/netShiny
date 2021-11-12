@@ -511,7 +511,7 @@ get_summ_stats_plot <- function(vals, input){
                     val = numeric())
   err <- FALSE
   for (i in vals$sett_names){
-    mat <- getNZ(vals = vals, input = input, mat = vals$networks[[i]])
+    mat <- getNZ(vals = vals, input = input, mat = vals$networks[[i]], to_plot = TRUE)
     mat <- get_subnet(vals = vals, mat = mat)
 
     g <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = TRUE)
@@ -716,11 +716,11 @@ mat_dist <- function(mat1, mat2, dist = "Euclidean", mat_type){
     all_sum <- diff_mat/denom
   }
 
-  else if(dist == "Jaccard"){
-    intersection <- sum(mat1 == mat2)
-    denom <- mat1@dim[[1]]^2 - intersection
-    all_sum <- 1 - intersection/denom
-  }
+  # else if(dist == "Jaccard"){
+  #   intersection <- sum(mat1 == mat2)
+  #   denom <- mat1@dim[[1]]^2 - intersection
+  #   all_sum <- 1 - intersection/denom
+  # }
   return(all_sum)
 }
 

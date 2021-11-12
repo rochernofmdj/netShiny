@@ -40,11 +40,14 @@ get_subnet <- function(vals, mat){
 # Function that returns an adjacency or weighted matrix with only nodes
 # that satisfy threshold value(s) given. If (both) threshold value(s) are NULL, it will
 # return an adjacency or weight matrix that only include non-isolated nodes
-getNZ <- function(vals, input, mat, diff = FALSE){
+getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
   shiny::validate(shiny::need(!is.null(mat), "Getting proper data"))
+  if(vals$mode == "gxe"){
+    shiny::validate(shiny::need(!is.null(vals$n_traits), "Getting proper data"))
+  }
   mat <- Matrix::Matrix(mat)
   n_nodes <- dim(mat)[[2]]
-  if(is.null(vals$n_traits)){
+  if(isFALSE(vals$mode == "gxe") || isTRUE(diff) || isTRUE(to_plot)){
     if(!is.null(input$cor_t) && isFALSE(diff)){
       #mat[abs(mat) < input$cor_t] <- 0
       indic <- Matrix::which(abs(mat) < input$cor_t, arr.ind = TRUE)
@@ -58,10 +61,10 @@ getNZ <- function(vals, input, mat, diff = FALSE){
   }
 
   else{
-    if (!is.null(input$cor_m) && isFALSE(diff)){
+    if (!is.null(input$cor_m)){
       mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
     }
-    if (!is.null(input$cor_t) && isFALSE(diff)){
+    if (!is.null(input$cor_t)){
       mat[, 1:vals$n_traits][abs(mat[, 1:vals$n_traits]) < input$cor_t] <- 0
       mat[1:vals$n_traits, ][abs(mat[1:vals$n_traits, ]) < input$cor_t] <- 0
     }
