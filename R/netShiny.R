@@ -93,7 +93,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::selectInput("marker", "Markers", all_node_nms),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("search"), btnReset = shiny::icon("times"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
-                                shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = "Fast Greedy"),
+                                #shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = "Fast Greedy"),
                                 shiny::tags$head(
                                   shiny::tags$style(shiny::HTML('#subgraph{color:black; background-color:#F5F2F2}
                                   #customize{color:black; background-color:#F5F2F2}
@@ -152,7 +152,7 @@ netShiny <- function(Net.obj = NULL,
                   shiny::tags$head(shiny::tags$style("#modalStartup_step1 .modal-footer{ display:none}"))),
     custombsModal("modalStartup_reconstruction", "Arguments for Network Reconstruction", "nextButton_startup", size = "large",
                   shiny::selectInput("file_names", "Data Files", choices = NULL),
-                  shinyWidgets::awesomeCheckbox("adv_op", "Show advanced option", value = FALSE),
+                  shinyWidgets::awesomeCheckbox("adv_op", "Show advanced options", value = FALSE),
                   shiny::tags$hr(),
                   shiny::fluidRow(
                     shiny::column(width = 6,
@@ -160,6 +160,14 @@ netShiny <- function(Net.obj = NULL,
                                   shinyWidgets::pickerInput(inputId = "net_method_start", label = "method", choices = c("Gibbs sampling" = "gibbs",
                                                                                                                         "approximation method" = "approx",
                                                                                                                         "nonparanormal" = "npn"), selected = "npn"),
+                                  # shinyWidgets::checkboxGroupButtons(inputId = "net_method_start2", label = "Method",
+                                  #                                    #checkIcon = list(yes = icon("check")),
+                                  #                                    choices = c("Gibbs" = "gibbs", "Approximation" = "approx", "Nonparanormal" = "npn"),
+                                  #                                    checkIcon = list(
+                                  #                                      yes = tags$i(class = "fa fa-check-square",
+                                  #                                                   style = "color: steelblue"),
+                                  #                                      no = tags$i(class = "fa fa-square-o",
+                                  #                                                  style = "color: steelblue"))),
                                   shiny::textInput(inputId = "net_rho_start", label = "rho (decreasing sequence of non-negative numbers that control the sparsity level)", value = "NULL"),
                                   shiny::numericInput(inputId = "net_n.rho_start", label = "n.rho (number of regularization parameters)", value = 10),
                                   shiny::numericInput(inputId = "net_rho.ratio_start", label = "rho.ratio (distance between the elements of rho sequence)",
@@ -470,7 +478,8 @@ netShiny <- function(Net.obj = NULL,
                                   nodes_to_change = NULL,
                                   color_custom = NULL,
                                   layout = "Automatic",
-                                  roundness = 0)
+                                  roundness = 0,
+                                  cluster_algs = "Fast Greedy")
 
     # Show the model on start up ...
     if(is.null(Net.obj) || isTRUE(to_reconstruct)){
@@ -587,6 +596,7 @@ netShiny <- function(Net.obj = NULL,
     #This code makes sure that layout is changed accordingly to layout chosen
     shiny::observeEvent({input$layout}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      vals$layout <- input$layout
       if(input$layout == "Tree"){
         shinyjs::show(id = "roots")
         shinyjs::show(id = "tree_layout_text")
@@ -599,16 +609,15 @@ netShiny <- function(Net.obj = NULL,
         shinyjs::hide(id = "ok_tree")
         vals$tree_root <- c(" ", vals$tree_root)
       }
+
     })
 
-    shiny::observeEvent(c(input$layout, input$roundness), {
-      if(shiny::isTruthy(input$layout)){
-        vals$layout <- input$layout
-      }
+    shiny::observeEvent(input$roundness, {
+      vals$roundness <- input$roundness
+    })
 
-      if(shiny::isTruthy(input$roundness)){
-        vals$roundess <- input$roundness
-      }
+    shiny::observeEvent(input$cluster_algs, {
+      vals$cluster_algs <- input$cluster_algs
     })
 
     #When ok is clicked on the popup, check if input is valid
@@ -725,7 +734,7 @@ netShiny <- function(Net.obj = NULL,
           shiny::updateSelectInput(session, "net2", label = "Right Panel")
 
           sapply(controls, shinyjs::hide)
-          sapply(c("cor_t", "subgraph", "net1", "net2", "cluster_algs", "layout", "roundness"), shinyjs::show)
+          sapply(c("cor_t", "subgraph", "net1", "net2", "cluster_algs", "layout", "roundness", "print_network", "customize"), shinyjs::show)
           if(vals$mode == "gxe"){
             shinyjs::show("cor_m")
           }
@@ -769,7 +778,7 @@ netShiny <- function(Net.obj = NULL,
       shiny::showModal(shiny::modalDialog(
         size = "s",
         list(shiny::h3("Customize Networks"),
-             shinyBS::bsCollapse(id = "collapseCustomize", open = "Nodes",
+             shinyBS::bsCollapse(id = "collapseCustomize", open = "Layout",
                                  shinyBS::bsCollapsePanel("Nodes",
                                                           shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
                                                           shiny::splitLayout(cellWidths = rep("33%", 3),
@@ -796,9 +805,10 @@ netShiny <- function(Net.obj = NULL,
                                                           shinyjs::hidden(shinyWidgets::materialSwitch(inputId = "hide_iso_nodes",label = "Hide Isolated Nodes", value = TRUE, status = "success", right = TRUE)),
                                                           style = "primary"),
                                  shinyBS::bsCollapsePanel("Edges",
-                                                          shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
+                                                          shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = vals$roundness),
                                                           style = "primary"),
                                  shinyBS::bsCollapsePanel("Layout",
+                                                          shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = vals$cluster_algs),
                                                           shiny::selectInput("layout", "Layout Algorithm",
                                                                              c("Automatic", "Circle", "Fruchterman-Reingold", "Grid.2D", "Kamada-Kawai" = "kk", "Tree"),
                                                                              selected = vals$layout),
@@ -834,6 +844,13 @@ netShiny <- function(Net.obj = NULL,
         shinyjs::hide(id = "roots")
         shinyjs::hide(id = "tree_layout_text")
         shinyjs::hide(id = "ok_tree")
+      }
+
+      if(input$tabs != "comm_detect"){
+        shinyjs::hide("cluster_algs")
+      }
+      else{
+        shinyjs::hide("heading_cpanel0721075")
       }
     })
 

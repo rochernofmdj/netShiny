@@ -817,10 +817,10 @@ comm_detection_plot <- function(vals, input, setting){
     lay <- igraph::layout_with_fr(g)
     row.names(lay) <- names(igraph::V(g))
 
-    if(input$cluster_algs == "Fast Greedy"){
+    if(vals$cluster_algs == "Fast Greedy"){
       try(c1 <- igraph::cluster_fast_greedy(g))
     }
-    else if(input$cluster_algs == "Edge Betweenness"){
+    else if(vals$cluster_algs == "Edge Betweenness"){
       try(c1 <- igraph::cluster_edge_betweenness(g))
     }
 
