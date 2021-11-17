@@ -47,6 +47,7 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
   }
   mat <- Matrix::Matrix(mat)
   n_nodes <- dim(mat)[[2]]
+
   if(isFALSE(vals$mode == "gxe") || isTRUE(diff) || isTRUE(to_plot)){
     if(!is.null(input$cor_t) && isFALSE(diff)){
       #mat[abs(mat) < input$cor_t] <- 0
@@ -56,23 +57,39 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
     diag(mat) <- 0 #Makes diagonal values 0
     mat <- Matrix::drop0(mat) #Returns sparse matrix with no explicit zeroes (including removing diagonal zeroes)
     nzvec <- which(Matrix::colSums(mat) == 0) #Gets indices of isolated nodes
-    if(length(nzvec) > 0) mat <- mat[-nzvec, -nzvec]
+    if(isFALSE(vals$hide_iso_nodes) || isTRUE(diff)){
+      invisible(mat)
+    }
+    if(length(nzvec) > 0){
+      mat <- mat[-nzvec, -nzvec]
+    }
     invisible(mat)
   }
 
   else{
-    if (!is.null(input$cor_m)){
+    if(!is.null(input$cor_m)){
       mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
     }
-    if (!is.null(input$cor_t)){
+    if(!is.null(input$cor_t)){
       mat[, 1:vals$n_traits][abs(mat[, 1:vals$n_traits]) < input$cor_t] <- 0
       mat[1:vals$n_traits, ][abs(mat[1:vals$n_traits, ]) < input$cor_t] <- 0
     }
     diag(mat) <- 0  #Makes diagonal values 0
     mat <- Matrix::drop0(mat, tol = 0) #Returns sparse matrix with no explicit zeroes for opt.adj, thus removing diagonal 0 values
     nzvec <- which(Matrix::colSums(mat) == 0) #gets indices of traits and markers that do not have any links
-    nzvec <- nzvec[nzvec > vals$n_traits] #gets indices of only markers that do not have any links
-    mat <- mat[-nzvec, -nzvec]
+    if(isTRUE(vals$hide_iso_markers) && isFALSE(vals$hide_iso_traits)){
+      nzvec <- nzvec[nzvec > vals$n_traits] #gets indices of only markers that do not have any links
+    }
+    else if(isFALSE(vals$hide_iso_markers) && isTRUE(vals$hide_iso_traits)){
+      nzvec <- nzvec[nzvec <= vals$n_traits] #gets indices of only traits that do not have any links
+    }
+    else if(isFALSE(vals$hide_iso_markers) && isFALSE(vals$hide_iso_traits)){
+      nzvec <- numeric()
+    }
+
+    if(length(nzvec) > 0){
+      mat <- mat[-nzvec, -nzvec]
+    }
     invisible(mat)
   }
 }

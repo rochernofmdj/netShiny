@@ -479,7 +479,10 @@ netShiny <- function(Net.obj = NULL,
                                   color_custom = NULL,
                                   layout = "Automatic",
                                   roundness = 0,
-                                  cluster_algs = "Fast Greedy")
+                                  cluster_algs = "Fast Greedy",
+                                  hide_iso_markers = TRUE,
+                                  hide_iso_traits = FALSE,
+                                  hide_iso_nodes = TRUE)
 
     # Show the model on start up ...
     if(is.null(Net.obj) || isTRUE(to_reconstruct)){
@@ -518,7 +521,9 @@ netShiny <- function(Net.obj = NULL,
                           vals$tree_root,
                           vals$rseed,
                           vals$sett_names,
-                          vals$map_nodes), {
+                          vals$map_nodes,
+                          vals$hide_iso_markers,
+                          vals$hide_iso_traits), {
                             shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
                             mat_f <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
                             mat_f2 <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
@@ -800,9 +805,9 @@ netShiny <- function(Net.obj = NULL,
                                                           ),
                                                           shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
                                                           shiny::hr(),
-                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_markers",label = "Hide Isolated Markers", value = TRUE, status = "success", right = TRUE),
-                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_traits",label = "Hide Isolated Traits", value = FALSE, status = "success", right = TRUE),
-                                                          shinyjs::hidden(shinyWidgets::materialSwitch(inputId = "hide_iso_nodes",label = "Hide Isolated Nodes", value = TRUE, status = "success", right = TRUE)),
+                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_markers",label = "Hide Isolated Markers", value = shiny::isolate(vals$hide_iso_markers), status = "success", right = TRUE),
+                                                          shinyWidgets::materialSwitch(inputId = "hide_iso_traits", label = "Hide Isolated Traits", value = shiny::isolate(vals$hide_iso_traits), status = "success", right = TRUE),
+                                                          shinyjs::hidden(shinyWidgets::materialSwitch(inputId = "hide_iso_nodes",label = "Hide Isolated Nodes", value = shiny::isolate(vals$hide_iso_nodes), status = "success", right = TRUE)),
                                                           style = "primary"),
                                  shinyBS::bsCollapsePanel("Edges",
                                                           shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = vals$roundness),
@@ -852,6 +857,12 @@ netShiny <- function(Net.obj = NULL,
       else{
         shinyjs::hide("heading_cpanel0721075")
       }
+    })
+
+    shiny::observeEvent(c(input$hide_iso_markers, input$hide_iso_traits, input$hide_iso_nodes), {
+      vals$hide_iso_markers <- input$hide_iso_markers
+      vals$hide_iso_traits <- input$hide_iso_traits
+      vals$hide_iso_nodes <- input$hide_iso_nddes
     })
 
     shiny::observeEvent(input$color_apply, {
