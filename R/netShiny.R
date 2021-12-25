@@ -441,6 +441,14 @@ netShiny <- function(Net.obj = NULL,
                                                                    )
                                                                  )
                                                  ),
+                                                 shiny::tabPanel("Venn Diagram",
+                                                                 shinyWidgets::dropdownButton(
+                                                                   shiny::tags$h3("Choose Networks"),
+                                                                   shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, multiple = TRUE),
+                                                                   circle = TRUE, status = "primary", icon = shiny::icon("cog"),
+                                                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
+                                                                 ),
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag"))),
                                                  shiny::tabPanel("Nodes Sets",
                                                                  shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")))
                               )
@@ -1056,6 +1064,14 @@ netShiny <- function(Net.obj = NULL,
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(length(input$dist_meas_plot) > 0, "Choose a distance measure"))
       p <- apply_mat_dist_list(vals = vals, input = input, for_plot = TRUE)
+      p
+
+    })
+
+    output$venn_diag <- shiny::renderPlot({
+      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(length(input$dist_meas_plot) > 0, "Choose a distance measure"))
+      p <- get_venn_diag(vals = vals, input = input)
       p
 
     })
