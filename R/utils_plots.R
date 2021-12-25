@@ -382,6 +382,34 @@ get_diff_sets <- function(vals, input){
 }
 
 ##########################################################
+##################VENN DIAGRAM SUBTAB#####################
+##########################################################
+
+get_venn_diag <- function(vals, input){
+  settings <- vector("list", length = length(vals$networks))
+  for (i in 1:length(settings)){
+    settings[[i]] <- get_nz_nodes(mat = vals$networks[[i]], vals = vals, input = input)
+  }
+  names(settings) <- vals$sett_names
+
+  venn <- Venn(settings)
+  data <- process_data(venn)
+
+  p <- ggplot() +
+    # change mapping of color filling
+    geom_sf(aes(fill = id), data = venn_region(data), show.legend = FALSE) +
+    # adjust edge size and color
+    geom_sf(aes(color = id), size = 2, data = venn_setedge(data), show.legend = FALSE) +
+    # show set label in bold
+    geom_sf_text(aes(label = name), fontface = "bold", data = venn_setlabel(data)) +
+    # add a alternative region name
+    geom_sf_label(aes(label = count), data = venn_region(data), alpha = 0.5) +
+    theme_void()
+  return(p)
+}
+
+
+##########################################################
 ###############CENTRALITY MEASURES TAB####################
 ##########################################################
 
