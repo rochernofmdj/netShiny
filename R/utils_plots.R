@@ -392,19 +392,19 @@ get_venn_diag <- function(vals, input){
   }
   names(settings) <- vals$sett_names
 
-  venn <- Venn(settings)
-  data <- process_data(venn)
+  venn <- ggVennDiagram::Venn(settings)
+  data <- ggVennDiagram::process_data(venn)
 
-  p <- ggplot() +
+  p <- ggplot2::ggplot() +
     # change mapping of color filling
-    geom_sf(aes(fill = id), data = venn_region(data), show.legend = FALSE) +
+    ggplot2::geom_sf(ggplot2::aes(fill = id), data = ggVennDiagram::venn_region(data), show.legend = FALSE) +
     # adjust edge size and color
-    geom_sf(aes(color = id), size = 2, data = venn_setedge(data), show.legend = FALSE) +
+    ggplot2::geom_sf(ggplot2::aes(color = id), size = 2, data = ggVennDiagram::venn_setedge(data), show.legend = FALSE) +
     # show set label in bold
-    geom_sf_text(aes(label = name), fontface = "bold", data = venn_setlabel(data)) +
+    ggplot2::geom_sf_text(ggplot2::aes(label = name), fontface = "bold", data = ggVennDiagram::venn_setlabel(data)) +
     # add a alternative region name
-    geom_sf_label(aes(label = count), data = venn_region(data), alpha = 0.5) +
-    theme_void()
+    ggplot2::geom_sf_label(ggplot2::aes(label = count), data = ggVennDiagram::venn_region(data), alpha = 0.5) +
+    ggplot2::theme_void()
   return(p)
 }
 
