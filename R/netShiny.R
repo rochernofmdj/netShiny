@@ -444,11 +444,12 @@ netShiny <- function(Net.obj = NULL,
                                                  shiny::tabPanel("Venn Diagram",
                                                                  shinyWidgets::dropdownButton(
                                                                    shiny::tags$h3("Choose Networks"),
-                                                                   shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, multiple = TRUE),
+                                                                   shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
+                                                                   shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, multiple = TRUE),
                                                                    circle = TRUE, status = "primary", icon = shiny::icon("cog"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
                                                                  ),
-                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag"))),
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px"))),
                                                  shiny::tabPanel("Nodes Sets",
                                                                  shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")))
                               )
@@ -1074,7 +1075,7 @@ netShiny <- function(Net.obj = NULL,
       p <- get_venn_diag(vals = vals, input = input)
       p
 
-    })
+    }, bg = "transparent")
 
     output$title_dist_plot <- shiny::renderText({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
