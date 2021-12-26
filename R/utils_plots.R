@@ -388,14 +388,14 @@ get_diff_sets <- function(vals, input){
 get_venn_diag <- function(vals, input){
   settings <- vector("list", length = length(vals$networks))
 
-  if(mode == "nodes"){
+  if(isTRUE(input$venn_opt)){
     for (i in 1:length(settings)){
       settings[[i]] <- get_nz_nodes(mat = vals$networks[[i]], vals = vals, input = input)
     }
   }
   else{
     for (i in 1:length(settings)){
-      g <- igraph::graph_from_adjacency_matrix(matrix = vals$networks[[i]], mode = "undirected", weighted = TRUE)
+      g <- igraph::graph_from_adjacency_matrix(adjmatrix = vals$networks[[i]], mode = "undirected", weighted = TRUE)
       edges <- igraph::get.edgelist(g)
       for (rw in 1:nrow(edges)){
         edges[rw, ] <- sort(edges[rw, ])
