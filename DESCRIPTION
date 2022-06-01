@@ -8,7 +8,7 @@ Description: We developed a comprehensive tool that helps with visualization and
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 Imports: 
     colourpicker (>= 1.1.1),
     dplyr (>= 1.0.5),
@@ -24,6 +24,7 @@ Imports:
     netgwas (>= 1.13),
     plotly (>= 4.9.3),
     promises (>= 1.2.0.1),
+    readxl (>= 1.4.0),
     scales (>= 1.1.1),
     shinycssloaders (>= 1.0.0),
     shinyjs (>= 2.0.0),
@@ -33,8 +34,7 @@ Imports:
     tools (>= 4.0.5),
     utils (>= 4.0.5),
     visNetwork (>= 2.0.9),
-    withr (>= 2.4.2),
-    xlsx (>= 0.6.5)
+    withr (>= 2.4.2)
 Depends: 
     shinyBS (>= 0.61),
     shiny (>= 1.6.0),
