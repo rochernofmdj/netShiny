@@ -58,12 +58,12 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
     mat <- Matrix::drop0(mat) #Returns sparse matrix with no explicit zeroes (including removing diagonal zeroes)
     nzvec <- which(Matrix::colSums(mat) == 0) #Gets indices of isolated nodes
     if(isFALSE(vals$hide_iso_nodes) || isTRUE(diff)){
-      invisible(mat)
+      return(invisible(mat))
     }
     if(length(nzvec) > 0){
       mat <- mat[-nzvec, -nzvec]
     }
-    invisible(mat)
+    return(invisible(mat))
   }
 
   else{
@@ -90,7 +90,7 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
     if(length(nzvec) > 0){
       mat <- mat[-nzvec, -nzvec]
     }
-    invisible(mat)
+    return(invisible(mat))
   }
 }
 
