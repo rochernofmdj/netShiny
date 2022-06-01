@@ -1234,7 +1234,6 @@ netShiny <- function(Net.obj = NULL,
         names_files <- append(names_files, t_name)
 
         if(tools::file_ext(t_name) == "xlsx" || tools::file_ext(t_name) == "xls"){
-          #uploadedFiles$files[[t_name]] <- xlsx::read.xlsx2(input$files_upload[[i, 'datapath']], sheetIndex = 1)
           uploadedFiles$files[[t_name]] <- readxl::read_excel(path = input$files_upload[[i, 'datapath']])
           sett_upFiles(t_name)
         }
@@ -1258,8 +1257,6 @@ netShiny <- function(Net.obj = NULL,
       ind <- which(input$files_upload[['name']] == input$currFile)
       if(shiny::isTruthy(ind)){
         if(tools::file_ext(input$currFile) == "xlsx" || tools::file_ext(input$currFile) == "xls"){
-          # uploadedFiles$files[[input$currFile]] <- xlsx::read.xlsx2(input$files_upload[[ind, 'datapath']], sheetIndex = 1,
-          #                                                           header = input$header)
           uploadedFiles$files[[input$currFile]] <- readxl::read_excel(path = input$files_upload[[ind, 'datapath']], col_names = input$header)
         }
         else{
@@ -1304,7 +1301,6 @@ netShiny <- function(Net.obj = NULL,
         }
 
         if(tools::file_ext(mapping_file$name) == "xlsx" || tools::file_ext(mapping_file$name) == "xls"){
-          #mapping <- xlsx::read.xlsx2(mapping_file$datapath, sheetIndex = 1, header = input$header_mapping)
           mapping <- readxl::read_excel(path = mapping_file$datapath, col_names = input$header_mapping)
         }
         else{
