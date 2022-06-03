@@ -63,7 +63,7 @@ perform_startup_recon <- function(val_nets, files, l_args) {
   }
   shiny::withProgress(message = "Reconstructing Networks", value = 0, {
     for (i in 1:len_files) {
-      curr_name <- paste0(tools::file_path_sans_ext(nms[[i]]), "_", l_args[["net_method_start"]])
+      curr_name <- paste0(tools::file_path_sans_ext(nms[i]), "_", l_args[["net_method_start"]])
       shiny::incProgress(1/len_files, detail = paste("Reconstructing Network", curr_name))
       if(curr_name %in% names(val_nets)){
         shiny::showNotification(paste("File with name ", curr_name, "has already been reconstructed. \n", "Skipping."), type = "warning")
@@ -73,27 +73,27 @@ perform_startup_recon <- function(val_nets, files, l_args) {
         expr = {
           val_nets[[curr_name]] <- netgwas::netphenogeno(
             data = files[[i]],
-            method = l_args[["net_method_start"]],
-            rho = l_args[["net_rho_start"]],
-            n.rho = l_args[["net_n.rho_start"]],
-            rho.ratio = l_args[["net_rho.ratio_start"]],
-            ncores = l_args[["net_ncores_start"]],
-            em.iter = l_args[["net_em.iter_start"]],
-            em.tol = l_args[["net_em.tol_start"]],
+            method = l_args[[nms[i]]][["net_method_start"]],
+            rho = l_args[[nms[i]]][["net_rho_start"]],
+            n.rho = l_args[[nms[i]]][["net_n.rho_start"]],
+            rho.ratio = l_args[[nms[i]]][["net_rho.ratio_start"]],
+            ncores = l_args[[nms[i]]][["net_ncores_start"]],
+            em.iter = l_args[[nms[i]]][["net_em.iter_start"]],
+            em.tol = l_args[[nms[i]]][["net_em.tol_start"]],
             verbose = FALSE
           )
           val_nets[[curr_name]] <- netgwas::selectnet(
             netgwas.obj = val_nets[[curr_name]],
-            opt.index = l_args[["sel_opt.index_start"]],
-            criteria = l_args[["sel_criteria_start"]],
-            ebic.gamma = l_args[["sel_ebic.gamma_start"]],
-            ncores = l_args[["sel_ncores_start"]],
+            opt.index = l_args[[nms[i]]][["sel_opt.index_start"]],
+            criteria = l_args[[nms[i]]][["sel_criteria_start"]],
+            ebic.gamma = l_args[[nms[i]]][["sel_ebic.gamma_start"]],
+            ncores = l_args[[nms[i]]][["sel_ncores_start"]],
             verbose = FALSE
           )$par.cor
         },
         error = function(cond) {
           shiny::showNotification(
-            paste("File ", nms[[i]], " was unsuccesful during reconstruction"),
+            paste("File ", nms[i], " was unsuccesful during reconstruction"),
             type = "error",
             duration = NULL
           )
@@ -111,7 +111,7 @@ perform_startup_recon <- function(val_nets, files, l_args) {
 process_args_recon <- function(arg, nc){
   if(isTRUE(nc)){
     if(arg == "all"){
-      return(all)
+      return("all")
     }
     else{
       x <- tryCatch(expr = {as.numeric(arg)},
@@ -136,19 +136,16 @@ process_args_recon <- function(arg, nc){
 # Function to get the arguments for the netphenogeno and selectnet function in the proper format
 # This function takes a boolean argument and returns a list with all of the arguments for the functions
 get_args_recon <- function(input, start_up){
-  args_net <- args_netphenogeno[-length(args_netphenogeno)]
-  args_sel <- args_selectnet[-length(args_selectnet)]
-
   if(isTRUE(start_up)){
-    args_net_mod <- paste("net_", args_net, "_start", sep = "")
-    args_sel_mod <- paste("sel_", args_sel, "_start", sep = "")
+    args_net_mod <- paste("net_", args_netphenogeno, "_start", sep = "")
+    args_sel_mod <- paste("sel_", args_selectnet, "_start", sep = "")
     args_all_mod <- c(args_net_mod, args_sel_mod)
-    check1 <- c("net_rho_start", "sel_opt.index_start", "sel_criteria_start")
+    check1 <- c("net_rho_start", "sel_opt.index_start")
     check2 <- c("net_ncores_start", "sel_ncores_start")
   }
   else{
-    args_net_mod <- paste("net_", args_net, sep = "")
-    args_sel_mod <- paste("sel_", args_sel, sep = "")
+    args_net_mod <- paste("net_", args_netphenogeno, sep = "")
+    args_sel_mod <- paste("sel_", args_selectnet, sep = "")
     args_all_mod <- c(args_net_mod, args_sel_mod)
     check1 <- c("net_rho", "sel_opt.index", "sel_criteria")
     check2 <- c("net_ncores", "sel_ncores")
@@ -156,16 +153,18 @@ get_args_recon <- function(input, start_up){
 
   list_args <- stats::setNames(vector("list", length = 11), args_all_mod)
   for(i in 1:length(args_all_mod)){
-    if(args_all_mod[i] %in% check1){
-      list_args[[args_all_mod[i]]] <- lapply(input[[args_all_mod[[i]]]], process_args_recon, FALSE)[[1]]
+    curr_arg <- args_all_mod[i]
+    if(curr_arg %in% check1){
+      list_args[[args_all_mod[i]]] <- process_args_recon(input[[curr_arg]], FALSE)
     }
-    else if(args_all_mod[i] %in% check2){
-      list_args[[args_all_mod[i]]] <- lapply(input[[args_all_mod[[i]]]], process_args_recon, TRUE)[[1]]
+    else if(curr_arg %in% check2){
+      list_args[[curr_arg]] <- process_args_recon(input[[curr_arg]], TRUE)
     }
     else{
-      list_args[[args_all_mod[i]]] <- input[[args_all_mod[i]]]
+      list_args[[curr_arg]] <- input[[curr_arg]]
     }
   }
+
   return(list_args)
 }
 

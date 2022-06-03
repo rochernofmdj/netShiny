@@ -180,7 +180,7 @@ netShiny <- function(Net.obj = NULL,
                     shiny::column(width = 6,
                                   shiny::tags$h3("Arguments for Selecting Optimal Network", id = "sel_net_tag"),
                                   shiny::textInput(inputId = "sel_opt.index_start", label = "opt.index (manually choose an optimal graph from the graph path)", value = "NULL"),
-                                  shinyWidgets::pickerInput(inputId = "sel_criteria_start", label = "criteria (model selection criteria)", choices = c("NULL", "ebic", "aic"), selected = "NULL"),
+                                  shinyWidgets::pickerInput(inputId = "sel_criteria_start", label = "criteria (model selection criteria)", choices = c("ebic", "aic"), selected = "ebic"),
                                   shiny::numericInput(inputId = "sel_ebic.gamma_start", label = "ebic.gamma (tuning parameter for ebic)",
                                                       value = 0.5, min = 0, max = 1, step = 0.1),
                                   shiny::textInput(inputId = "sel_ncores_start", label = "ncores (number of cores to use for the calculations)", value = "1")
@@ -371,7 +371,7 @@ netShiny <- function(Net.obj = NULL,
                                   shiny::column(width = 6,
                                                 shiny::tags$h3("Arguments for selectnet"),
                                                 shiny::textInput(inputId = "sel_opt.index", label = "opt.index (manually choose an optimal graph from the graph path)", value = "NULL"),
-                                                shinyWidgets::pickerInput(inputId = "sel_criteria", label = "criteria (model selection criteria)", choices = c("NULL", "ebic", "aic"), selected = "NULL"),
+                                                shinyWidgets::pickerInput(inputId = "sel_criteria", label = "criteria (model selection criteria)", choices = c("ebic", "aic"), selected = "ebic"),
                                                 shiny::numericInput(inputId = "sel_ebic.gamma", label = "ebic.gamma (tuning parameter for ebic)", value = 0.5),
                                                 shiny::textInput(inputId = "sel_ncores", label = "ncores (number of cores to use for the calculations)", value = "1"),
                                                 shiny::tags$h4("Bootsrap Method Parameters"),
@@ -1343,6 +1343,51 @@ netShiny <- function(Net.obj = NULL,
       shinyBS::toggleModal(session = session, modalId = "modalStartup_step1", toggle = "close")
     })
 
+    listenNetArgs <- shiny::reactive({
+      list(input$net_rho_start, input$net_n.rho_start, input$net_rho.ratio_start, input$net_ncores_start, input$net_em.iter_start, input$net_em.tol_start,
+           input$sel_opt.index_start, input$sel_criteria_start, input$sel_ebic.gamma_start, input$sel_ncores_start,
+           input$net_method_start, input$modalStartup_reconstruction)
+    })
+
+    shiny::observeEvent(listenNetArgs(), {
+      if(is.null(vals$start_up_args)){
+        for(i in 1:length(input$files_upload[, 1])){
+          t_name <- input$files_upload[[i, 'name']]
+          vals$start_up_args[[t_name]] <- get_args_recon(input = input, start_up = TRUE)
+        }
+      }
+      else{
+        vals$start_up_args[[input$file_names]] <- get_args_recon(input = input, start_up = TRUE)
+      }
+    }, ignoreInit = TRUE)
+
+    shiny::observeEvent(input$file_names, {
+      shiny::req(shiny::isTruthy(vals$start_up_args))
+      shinyWidgets::updatePickerInput(session = session, inputId = "net_method_start", label = "method", choices = c("Gibbs sampling" = "gibbs", "approximation method" = "approx", "nonparanormal" = "npn"),
+                                      selected = vals$start_up_args[[input$file_names]][["net_method_start"]])
+      shiny::updateTextInput(session = session, inputId = "net_rho_start", label = "rho (decreasing sequence of non-negative numbers that control the sparsity level)",
+                             value = ifelse(is.null(vals$start_up_args[[input$file_names]][["net_rho_start"]]), "NULL", vals$start_up_args[[input$file_names]][["net_rho_start"]]))
+      shiny::updateNumericInput(session = session, inputId = "net_n.rho_start", label = "n.rho (number of regularization parameters)",
+                                value = vals$start_up_args[[input$file_names]][["net_n.rho_start"]])
+      shiny::updateNumericInput(session = session, inputId = "net_rho.ratio_start", label = "rho.ratio (distance between the elements of rho sequence)", min = 0, max = 1, step = 0.1,
+                                value = vals$start_up_args[[input$file_names]][["net_rho.ratio_start"]])
+      shiny::updateTextInput(session = session, inputId = "net_ncores_start", label = "ncores (number of cores to use for the calculations)",
+                             value = as.character(vals$start_up_args[[input$file_names]][["net_ncores_start"]]))
+      shiny::updateNumericInput(session = session, inputId = "net_em.iter_start", label = "em.iter (number of EM iterations)",
+                                value = vals$start_up_args[[input$file_names]][["net_em.iter_start"]])
+      shiny::updateNumericInput(session = session, inputId = "net_em.tol_start", label = "em.tol (criteria to stop the EM iterations)", min = 0.001, max = 1, step = 0.001,
+                                value = vals$start_up_args[[input$file_names]][["net_em.tol_start"]])
+
+      shiny::updateTextInput(session = session, inputId = "sel_opt.index_start", label = "opt.index (manually choose an optimal graph from the graph path)",
+                             value = ifelse(is.null(vals$start_up_args[[input$file_names]][["sel_opt.index_start"]]), "NULL", vals$start_up_args[[input$file_names]][["sel_opt.index_start"]]))
+      shinyWidgets::updatePickerInput(session = session, inputId = "sel_criteria_start", label = "criteria (model selection criteria)", choices = c("ebic", "aic"),
+                                      selected = vals$start_up_args[[input$file_names]][["sel_criteria_start"]])
+      shiny::updateNumericInput(session = session, inputId = "sel_ebic.gamma_start", label = "ebic.gamma (tuning parameter for ebic)", min = 0, max = 1, step = 0.1,
+                                value = vals$start_up_args[[input$file_names]][["sel_ebic.gamma_start"]])
+      shiny::updateNumericInput(session = session, inputId = "sel_ncores_start", label = "ncores (number of cores to use for the calculations)",
+                                value = as.character(vals$start_up_args[[input$file_names]][["sel_ncores_start"]]))
+    }, ignoreInit = TRUE)
+
     shiny::observeEvent(input$startup_run, {
       if(!shiny::isTruthy(uploadedFiles$files)){
         shiny::showNotification("No Datafiles To Run", type = "warning")
@@ -1357,8 +1402,7 @@ netShiny <- function(Net.obj = NULL,
       vals$node_names <- unique(unlist(lapply(uploadedFiles$files, function(x) dimnames(x)[[2]])))
       sapply(c(args_all, "net_method_start", "file_names", "adv_op"), shinyjs::disable)
 
-      args <- get_args_recon(input = input, start_up = TRUE)
-      vals$networks <- perform_startup_recon(val_nets = vals$networks, files = uploadedFiles$files, l_args = args)
+      vals$networks <- perform_startup_recon(val_nets = vals$networks, files = uploadedFiles$files, l_args = vals$start_up_args)
 
       if(length(vals$networks) > 0){
         vals$sett_names <- names(vals$networks)
@@ -1368,7 +1412,7 @@ netShiny <- function(Net.obj = NULL,
         shinyjs::enable("dropdown_res")
       }
       sapply(c(args_all, "net_method_start", "file_names", "adv_op"), shinyjs::enable)
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$nextButton_mapping, {
       vals$map_nodes <- vals$map_nodes_init
