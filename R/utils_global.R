@@ -50,9 +50,9 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
 
   if(isFALSE(vals$mode == "gxe") || isTRUE(diff) || isTRUE(to_plot)){
     if(!is.null(input$cor_t) && isFALSE(diff)){
-      #mat[abs(mat) < input$cor_t] <- 0
-      indic <- Matrix::which(abs(mat) < input$cor_t, arr.ind = TRUE)
-      mat[indic] <- 0
+      mat[abs(mat) < input$cor_t] <- 0
+      #indic <- Matrix::which(abs(mat) < input$cor_t, arr.ind = TRUE)
+      #mat[indic] <- 0
     }
     diag(mat) <- 0 #Makes diagonal values 0
     mat <- Matrix::drop0(mat) #Returns sparse matrix with no explicit zeroes (including removing diagonal zeroes)
