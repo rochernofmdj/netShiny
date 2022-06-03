@@ -581,22 +581,21 @@ netShiny <- function(Net.obj = NULL,
     #Evertime a node is clicked, change to the bootstraps tab with
     #the information for the clicked trait/marker
     shiny::observeEvent({input$click}, {
-      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shinydashboard::updateTabItems(session, "tabs", selected = "net")
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shiny::updateSelectInput(session, "marker", selected = input$click, choices = c(input$click, nz_nodes))
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent({input$refresh}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       vals$rseed <- sample(1:1000, 1)
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent({input$print_network}, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shinyscreenshot::screenshot(selector = ".content")
 
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$settings_button, {
       if(!shiny::isTruthy(vals$networks)){
@@ -624,15 +623,15 @@ netShiny <- function(Net.obj = NULL,
         vals$tree_root <- c(" ", vals$tree_root)
       }
 
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$roundness, {
       vals$roundness <- input$roundness
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$cluster_algs, {
       vals$cluster_algs <- input$cluster_algs
-    })
+    }, ignoreInit = TRUE)
 
     #When ok is clicked on the popup, check if input is valid
     #then change the layout of the netowork to tree, else show another
@@ -654,13 +653,13 @@ netShiny <- function(Net.obj = NULL,
       else{
         vals$tree_root <- rts_inp
       }
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$cancel, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::isolate(shiny::updateSelectInput(session, "layout", selected = "Automatic"))
       shiny::removeModal()
-    })
+    }, ignoreInit = TRUE)
 
     #This hides the controls for when the tab is not the netoworks tab
     #And shows them when we switch back to the networks tab
@@ -784,7 +783,7 @@ netShiny <- function(Net.obj = NULL,
           shiny::actionButton("ok_sel_nodes", "OK")
         )
       ))
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$customize, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
@@ -866,7 +865,7 @@ netShiny <- function(Net.obj = NULL,
       else{
         shinyjs::hide("heading_cpanel0721075")
       }
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(c(input$hide_iso_markers, input$hide_iso_traits, input$hide_iso_nodes), {
       vals$hide_iso_markers <- input$hide_iso_markers
@@ -894,7 +893,7 @@ netShiny <- function(Net.obj = NULL,
         }
         vals$map_nodes$node_size[vec_change] <- rep(input$size_custom, length(vec_change))
       }
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$font_apply, {
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_custom)){
@@ -904,42 +903,42 @@ netShiny <- function(Net.obj = NULL,
         }
         vals$map_nodes$font_size[vec_change] <- rep(input$font_custom, length(vec_change))
       }
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$clear_nodes, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       vals$nodes_to_change <- vector()
       shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = character(0))
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$all_traits, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[1:vals$n_traits])
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$all_markers, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[vals$n_traits+1:length(all_nodes)])
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$reset_custom, {
       vals$map_nodes$node_color <- vals$original_colors
       vals$map_nodes$node_size <- NULL
       vals$map_nodes$font_size <- NULL
 
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$ok_sel_nodes, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       vals$subgraph_nodes <- input$nodes_subgraph
       shiny::removeModal()
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$reset_sel_nodes, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shinyWidgets::updatePrettyCheckboxGroup(session, inputId = "nodes_subgraph", label = NULL, choices = all_nodes, selected = NULL)
-    })
+    }, ignoreInit = TRUE)
 
     #output for the left panel network
     output$network_proxy_nodes <- visNetwork::renderVisNetwork({
