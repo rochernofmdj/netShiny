@@ -1126,7 +1126,7 @@ netShiny <- function(Net.obj = NULL,
         closeOnClickOutside = FALSE,
         html = TRUE
       )
-    })
+    }, ignoreInit = TRUE)
 
     futureData <- shiny::reactiveValues(data10 = resamples)
     myFuture <- NULL
@@ -1186,7 +1186,7 @@ netShiny <- function(Net.obj = NULL,
       }
 
       return(NULL)
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observe({
       if(inva()){
@@ -1268,7 +1268,7 @@ netShiny <- function(Net.obj = NULL,
       col_excl <- col_to_exclude(input$exc_columns)
       uploadedFiles$files[[input$currFile]] <- check_cols_to_excl(session = session, df = uploadedFiles$files[[input$currFile]], vec = col_excl)
       sett_upFiles(input$currFile)
-    })
+    }, ignoreInit = TRUE)
 
     output$tbl <- DT::renderDataTable({
       shiny::req(shiny::isTruthy(uploadedFiles$files) && length(uploadedFiles$files) > 0)
@@ -1340,7 +1340,7 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$nextButton_startup, {
       shinyBS::toggleModal(session = session, modalId = "modalStartup_step1", toggle = "close")
-    })
+    }, ignoreInit = TRUE)
 
     listenNetArgs <- shiny::reactive({
       list(input$net_rho_start, input$net_n.rho_start, input$net_rho.ratio_start, input$net_ncores_start, input$net_em.iter_start, input$net_em.tol_start,
@@ -1416,7 +1416,7 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$nextButton_mapping, {
       vals$map_nodes <- vals$map_nodes_init
       shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "close")
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$finish_data_settings, {
       shiny::req(shiny::isTruthy(vals$networks))
@@ -1485,23 +1485,23 @@ netShiny <- function(Net.obj = NULL,
         shinyBS::toggleModal(session = session, modalId = "data_settings", toggle = "close")
         shinyjs::disable("gxe_mode")
       }
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$prevButton_reconstruction, {
       shinyBS::toggleModal(session = session, modalId = "modalStartup_reconstruction", toggle = "close")
       shinyBS::toggleModal(session = session, modalId = "modalStartup_step1", toggle = "open")
-    })
+    }, ignoreInit = TRUE)
 
 
     shiny::observeEvent(input$prevButton_mapping, {
       shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "close")
       shinyBS::toggleModal(session = session, modalId = "modalStartup_reconstruction", toggle = "open")
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$prevButton_data_settings, {
       shinyBS::toggleModal(session = session, modalId = "data_settings", toggle = "close")
       shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "open")
-    })
+    }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$adv_op, {
       args_net <- methods::formalArgs(netgwas::netphenogeno)[-c(1, 2)]
