@@ -473,7 +473,7 @@ create_central_meas <- function(vals, input){
     if(input$cen_meas_col_switch){
       rects <- merge(graph_df, vals$map_nodes, by.x = "Name", by.y = "node")
       rects <- rects[, c(1, 6, 7)]
-      rects <- dplyr::distinct(rects, .keep_all = TRUE)
+      rects <- rects[!duplicated(rects$Name), ]
       rects <- rects[order(factor(rects$Name, levels = vals$map_nodes$node)),]
 
       a <- tapply(seq_along(rects$node_group), rects$node_group, min)
@@ -486,8 +486,7 @@ create_central_meas <- function(vals, input){
 
       rects_com <- merge(a, b, by.x = "node_group", by.y = "node_group")
       rects_com <- merge(rects_com, rects[, 2:3], by.x = "node_group", by.y = "node_group")
-
-      rects_com <- dplyr::distinct(rects_com, .keep_all = TRUE)
+      rects_com <- rects_com[!duplicated(rects_com$node_group), ]
       rects_com <- rects_com[order(factor(rects_com$node_group, levels = unique(vals$map_nodes$node_group))),]
       rects_com$node_group <- factor(rects_com$node_group, levels = unique(vals$map_nodes$node_group))
 
