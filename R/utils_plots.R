@@ -117,7 +117,8 @@ get_vis_net <- function(vals, input, mat, g, lay){
   }
   else{
     if(vals$mode == "gxe"){
-      test.visn$nodes$size <- c(rep(30, vals$n_traits), rep(20, nrow(test.visn$nodes) - vals$n_traits))
+      n_traits <- sum(test.visn$nodes$id %in% vals$map_nodes$node[1:vals$n_traits])
+      test.visn$nodes$size <- c(rep(30, n_traits), rep(20, nrow(test.visn$nodes) - n_traits))
     }
     else{
       test.visn$nodes$size <- rep(25, nrow(test.visn$nodes))
