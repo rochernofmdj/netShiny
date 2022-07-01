@@ -384,15 +384,15 @@ get_diff_sets <- function(vals, input){
 ##########################################################
 
 get_venn_diag <- function(vals, input){
-  settings <- vector("list", length = length(vals$networks))
+  settings <- vector("list")
 
   if(isTRUE(input$venn_opt)){
-    for (i in 1:length(settings)){
+    for (i in input$venn_diag_sel){
       settings[[i]] <- get_nz_nodes(mat = vals$networks[[i]], vals = vals, input = input)
     }
   }
   else{
-    for (i in 1:length(settings)){
+    for (i in input$venn_diag_sel){
       g <- igraph::graph_from_adjacency_matrix(adjmatrix = vals$networks[[i]], mode = "undirected", weighted = TRUE)
       edges <- igraph::get.edgelist(g)
       for (rw in 1:nrow(edges)){
@@ -402,8 +402,6 @@ get_venn_diag <- function(vals, input){
       settings[[i]] <- do.call(paste, c(edges, sep="-"))
     }
   }
-
-  names(settings) <- vals$sett_names
 
   venn <- ggVennDiagram::Venn(settings)
   data <- ggVennDiagram::process_data(venn)
