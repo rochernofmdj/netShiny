@@ -284,31 +284,26 @@ getDif <- function(vals, input){
   mat2@x[mat2@x > 0] <- 4
 
   diff <- mat1 - mat2
-  diff@x[diff@x %in% c(-5, 5)] <- 1
-  diff@x[diff@x %in% c(-1, 4)] <- 2
+
   diff@x[diff@x %in% c(-4, 1)] <- 3
+  diff@x[diff@x %in% c(-1, 4)] <- 2
+  diff@x[diff@x %in% c(-5, 5)] <- 1
   diff <- Matrix::drop0(diff)
 
   diff <- getNZ(vals = vals, input = input, mat = diff, diff = TRUE)
-  nms <- dimnames(diff)[[2]]
-  clrs <- c("blue", "red", "green")
-  summ <- Matrix::summary(diff)
-  summ$i <- nms[summ$i]
-  summ$j <- nms[summ$j]
-  summ$color <- clrs[summ$x]
 
-  diff@x[diff@x != 0] <- 1
-  newobj$opt.adj <- diff
-  newobj$changes <- summ
   shiny::validate(
-    shiny::need(dim(newobj$opt.adj)[[1]] != 0, "No Difference Between Networks")
+    shiny::need(dim(diff)[[1]] != 0, "No Difference Between Networks")
   )
 
-  g <- igraph::graph_from_adjacency_matrix(newobj$opt.adj, mode = "undirected")
-  igraph::E(g)$color <- newobj$changes$color
+  g <- igraph::graph_from_adjacency_matrix(diff, mode = "undirected", weighted = TRUE)
+  clrs <- c("blue", "red", "green")
+  edge_cols <- clrs[igraph::E(g)$weight]
+  igraph::E(g)$color <- edge_cols
+  igraph::E(g)$weight[igraph::E(g)$weight != 0] <- 1
   test.visn <- visNetwork::toVisNetworkData(g)
 
-  sel_nodes <- dimnames(newobj$opt.adj)[[1]]
+  sel_nodes <- dimnames(diff)[[1]]
   sel_by <- NULL
   if(!is.null(vals$map_nodes)){
     if(vals$mode == "gxe"){
@@ -322,6 +317,8 @@ getDif <- function(vals, input){
     test.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
     igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
   }
+
+  test.visn$nodes$font.size <- 20
 
   ledges <- data.frame(color = c("blue", "green", "red"),
                        label = c("Sign Change", "Gained", "Lost"), arrows = c("unidrected", "undirected", "undirected"))
