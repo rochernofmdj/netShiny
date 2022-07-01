@@ -6,7 +6,7 @@
 #' @return A Shiny app.
 #' @details This function opens the shiny app, netShiny. All of the arguments in netShiny are optional, so netShiny can be called without any arguments. Users are prompted with a series of modal dialogs after running the netShiny function. The first modal dialog gives users the possibility to upload files to the app and show the dataframes that already uploaded in a datatable. Users can choose files which contain information to reconstruct networks from them. The next modal dialog let users reconstruct networks using the dataframes that were uploaded. netShiny uses the functions netphenogeno and selectnet from the package netgwas for graph structure learning from non-Gaussian data. The next modal let users optionally choose a file containing the ordering of the nodes. If a dataframe containing the ordering of the nodes was already passed to mapping argument, this modal will visualize this in a datatable. The last modal let users choose the mode they want the app to run in, GxE (Genetic-by-Environment) or general mode. In GxE mode the language used in netShiny is more Genetic-by-Environment related. Users need to input the number of traits if GxE mode is chosen, and optionally, manually input a grouping for the traits.
 #' @examples
-#' sum(2, 2)
+#' netShiny()
 #' @author
 #' Rocherno de Jongh and Pariya Behrouzi \cr
 #' Maintainer: Rocherno de Jongh \email{rocherno.dejongh@@hotmail.com}
@@ -55,7 +55,7 @@ netShiny <- function(Net.obj = NULL,
     all_node_nms <- unique(unlist(lapply(Net.obj, function(x) dimnames(x)[[2]])))
     for(i in 1:length(Net.obj)){
       curr_nm <- sett_nms[i]
-      if(dim(Net.obj[[curr_nm]])[[1]] == dim(Net.obj[[curr_nm]])[[2]]){
+      if(Matrix::isSymmetric(Net.obj[[curr_nm]])){
         Net.obj[[curr_nm]] <- as.matrix(Net.obj[[curr_nm]])
         Net.obj[[curr_nm]] <- Matrix::Matrix(Net.obj[[curr_nm]], sparse = TRUE)
       }
@@ -442,10 +442,11 @@ netShiny <- function(Net.obj = NULL,
                                                                  )
                                                  ),
                                                  shiny::tabPanel("Venn Diagram",
-                                                                 shinyWidgets::dropdownButton(
+                                                                 shinyWidgets::dropdown(
                                                                    shiny::tags$h3("Choose Networks"),
                                                                    shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
-                                                                   shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, multiple = TRUE),
+                                                                   #shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE),
+                                                                   shinyWidgets::pickerInput(inputId = "net", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    circle = TRUE, status = "primary", icon = shiny::icon("cog"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
                                                                  ),
@@ -582,7 +583,7 @@ netShiny <- function(Net.obj = NULL,
     #the information for the clicked trait/marker
     shiny::observeEvent({input$click}, {
       shinydashboard::updateTabItems(session, "tabs", selected = "net")
-      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      nz_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
       shiny::updateSelectInput(session, "marker", selected = input$click, choices = c(input$click, nz_nodes))
     }, ignoreInit = TRUE)
 
