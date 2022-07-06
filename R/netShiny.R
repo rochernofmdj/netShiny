@@ -1048,7 +1048,7 @@ netShiny <- function(Net.obj = NULL,
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
-      net <- getDif(vals = vals, input = input)
+      net <- get_dif_net(vals = vals, input = input)
       net
     })
 

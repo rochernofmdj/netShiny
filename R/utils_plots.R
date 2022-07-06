@@ -261,7 +261,7 @@ get_par_cor_plot <- function(vals, input){
 ##############DIFFERENCE NETWORKS SUBTAB##################
 ##########################################################
 
-getDif <- function(vals, input){
+get_dif_net <- function(vals, input){
   mat1 <- vals$networks[[input$net1]]
   mat2 <- vals$networks[[input$net2]]
 
