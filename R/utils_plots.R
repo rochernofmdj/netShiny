@@ -261,10 +261,9 @@ get_par_cor_plot <- function(vals, input){
 ##############DIFFERENCE NETWORKS SUBTAB##################
 ##########################################################
 
-get_dif_net <- function(vals, input){
-  mat1 <- vals$networks[[input$net1]]
-  mat2 <- vals$networks[[input$net2]]
-
+# Function to get difference between to matrices
+# 1 = gained connection from mat1 -> mat2, 2 = lost connection from mat1 -> mat2, 3 = sign change from mat1 -> mat2
+get_diff_mat <- function(mat1, mat2){
   if(dim(mat1)[[1]] != dim(mat2)[[1]]){
     shiny::showNotification("WARNING: Dimension of Networks Are Different. Only Common Nodes Will Be Used.", type = "warning", duration = NULL)
     mat1_nodes <- dimnames(mat1)[[2]]
@@ -290,6 +289,14 @@ get_dif_net <- function(vals, input){
   diff@x[diff@x %in% c(-5, 5)] <- 1
   diff <- Matrix::drop0(diff)
 
+  return(diff)
+}
+
+get_dif_net <- function(vals, input){
+  mat1 <- vals$networks[[input$net1]]
+  mat2 <- vals$networks[[input$net2]]
+
+  diff <- get_diff_mat(mat1, mat2)
   diff <- getNZ(vals = vals, input = input, mat = diff, diff = TRUE)
 
   shiny::validate(
