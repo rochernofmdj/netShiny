@@ -338,6 +338,31 @@ get_dif_net <- function(vals, input){
 }
 
 ##########################################################
+##############DIFFERENCE TABLE SUBTAB#####################
+##########################################################
+
+# Function that return a table with the gained, lost, and sign change differences for a chosen network
+# against all other networks
+
+get_diff_table <- function(vals, input) {
+  chosen_net <- vals$networks[[input$net1]]
+  diff_df <- data.frame(Setting = character(), Gained = numeric(), Lost = numeric(), `Sign Change` = numeric())
+
+  for (sett in setdiff(vals$sett_names, input$net1)) {
+    res <- get_diff_mat(chosen_net, vals$networks[[sett]])
+    gained <- sum(res == 3) / 2
+    lost <- sum(res == 2) / 2
+    sign_change <- sum(res == 1) / 2
+    diff_df <- rbind(diff_df, data.frame("Setting" = sett, "Gained" = gained, "Lost" = lost, "Sign Change" = sign_change))
+  }
+
+  dt <- DT::datatable(data = diff_df, caption = input$net1, options = list(lengthChange = FALSE))
+
+  return(dt)
+}
+
+
+##########################################################
 ##################NODES SETS SUBTAB#######################
 ##########################################################
 

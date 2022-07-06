@@ -414,6 +414,8 @@ netShiny <- function(Net.obj = NULL,
                               shiny::tabsetPanel(id = "tab_differences",
                                                  shiny::tabPanel("Difference Networks",
                                                                  shinycssloaders::withSpinner(visNetwork::visNetworkOutput("diff_nets", height = "750px"))),
+                                                 shiny::tabPanel("Difference Table",
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_table"))),
                                                  shiny::tabPanel("Network Distances",
                                                                  shiny::fluidRow(
                                                                    shinydashboard::box(title = shiny::textOutput("title_dist_table"), width = 12, solidHeader = TRUE, status = "primary",
@@ -1050,6 +1052,15 @@ netShiny <- function(Net.obj = NULL,
       shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
       net <- get_dif_net(vals = vals, input = input)
       net
+    })
+
+    output$diff_table <- DT::renderDataTable({
+      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      if(shiny::isTruthy(input$cor_m)){
+        dt <- get_diff_table(vals = vals, input = input)
+        dt
+      }
+
     })
 
     output$distances_table <- shiny::renderTable({
