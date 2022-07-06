@@ -262,7 +262,7 @@ get_par_cor_plot <- function(vals, input){
 ##########################################################
 
 # Function to get difference between to matrices
-# 1 = gained connection from mat1 -> mat2, 2 = lost connection from mat1 -> mat2, 3 = sign change from mat1 -> mat2
+# 3 = gained connection from mat1 -> mat2, 2 = lost connection from mat1 -> mat2, 1 = sign change from mat1 -> mat2
 get_diff_mat <- function(mat1, mat2){
   if(dim(mat1)[[1]] != dim(mat2)[[1]]){
     shiny::showNotification("WARNING: Dimension of Networks Are Different. Only Common Nodes Will Be Used.", type = "warning", duration = NULL)
