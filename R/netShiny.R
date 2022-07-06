@@ -442,13 +442,15 @@ netShiny <- function(Net.obj = NULL,
                                                                  )
                                                  ),
                                                  shiny::tabPanel("Venn Diagram",
-                                                                 shinyWidgets::dropdown(
+                                                                 shinyWidgets::dropMenu(
+                                                                   shinyWidgets::actionBttn(inputId = "venn_diag", icon = shiny::icon("cog"), style = "material-circle", color = "default", size = "sm"),
                                                                    shiny::tags$h3("Choose Networks"),
                                                                    shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
                                                                    #shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE),
-                                                                   shinyWidgets::pickerInput(inputId = "net", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
-                                                                   circle = TRUE, status = "primary", icon = shiny::icon("cog"),
-                                                                   tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
+                                                                   shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
+                                                                   hideOnClick = TRUE
+                                                                   #circle = TRUE, status = "primary", icon = shiny::icon("cog"),
+                                                                   #tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
                                                                  ),
                                                                  shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px"))),
                                                  shiny::tabPanel("Nodes Sets",
@@ -1071,7 +1073,7 @@ netShiny <- function(Net.obj = NULL,
 
     output$venn_diag <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      shiny::validate(shiny::need(length(input$dist_meas_plot) > 0, "Choose a distance measure"))
+      shiny::validate(shiny::need(length(input$venn_diag_sel) >= 2, "Not Enough Networks Chosen"))
       p <- get_venn_diag(vals = vals, input = input)
       p
 
