@@ -315,11 +315,26 @@ netShiny <- function(Net.obj = NULL,
 
       #Networks tab
       shinydashboard::tabItem(tabName = "networks",
-                              shiny::splitLayout(cellWidths = c("50%", "50%"),
-                                                 style = "padding: 0px",
-                                                 cellArgs = list(style = "border-right: 1px solid silver"),
-                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
-                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px")))
+                              # shiny::splitLayout(cellWidths = c("50%", "50%"),
+                              #                    style = "padding: 0px",
+                              #                    cellArgs = list(style = "border-right: 1px solid silver"),
+                              #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
+                              #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px"))),
+
+                              shiny::tabsetPanel(id = "tabs_comm_detect",
+                                                 shiny::tabPanel("Networks", shiny::splitLayout(cellWidths = c("50%", "50%"),
+                                                                                                   style = "padding: 0px",
+                                                                                                   cellArgs = list(style = "border-right: 1px solid silver"),
+                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
+                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px")))
+                                                 ),
+                                                 shiny::tabPanel("Matrices",  fillPage(
+                                                   tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 100px) !important;}"),
+                                                   shinycssloaders::withSpinner(plotly::plotlyOutput("mat_plots", width = "100%", height = "100%"))
+                                                 ))
+
+                              )
+
       ),
 
       #Summary Statistics tab
@@ -973,6 +988,14 @@ netShiny <- function(Net.obj = NULL,
       lay <- get_igraph_lay(vals = vals, input = input, mat = mat)
       vis_net <- get_vis_net(vals = vals, input = input, mat = mat, g = g, lay = lay)
       vis_net
+    })
+
+    output$mat_plots <- plotly::renderPlotly({
+      if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      p <- get_mat_plots(vals = vals)
+
+      plotly::layout(p, paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
     })
 
     output$summary_statistics <- shiny::renderPlot({
