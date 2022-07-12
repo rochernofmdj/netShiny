@@ -32,7 +32,7 @@ igraph::add.vertex.shape("fcircle", clip = igraph::igraph.shape.noclip,
                          plot = mycircle, parameters = list(vertex.frame.color = 1, vertex.frame.width = 1))
 
 ##########################################################
-#####################NETWORKS TAB#########################
+#####################NETWORKS SUBTAB######################
 ##########################################################
 
 # Function that get the needed igraph object to use to make a network
@@ -140,6 +140,43 @@ get_vis_net <- function(vals, input, mat, g, lay){
     visNetwork::visEvents(doubleClick =  "function(nodes){Shiny.onInputChange('click', nodes.nodes[0]);;}") %>%
     visNetwork::visEdges(smooth = list(enabled = TRUE, type = "curvedCCW", roundness = vals$roundness)) %>%
     return()
+}
+
+##########################################################
+#####################MAT PLOTS SUBTAB#####################
+##########################################################
+
+# Function to create interactive matrices plot
+get_mat_plots <- function(vals) {
+  mat_plots <- list()
+  for (i in 1:length(vals$networks)) {
+    show_scale <- ifelse(i == 1, TRUE, FALSE)
+    curr_env <- vals$networks[[i]]
+    nms <- dimnames(curr_env)[[1]]
+    diag(curr_env) <- 0
+    fig <-
+      plot_ly(
+        x = nms,
+        y = nms,
+        z = as.matrix(curr_env),
+        zmin = -1,
+        zmid = 0,
+        zmax = 1,
+        type = "heatmap",
+        showscale = show_scale,
+        colors = colorRamp(c("blue", "#F5F2F2", "red")),
+        hovertemplate = paste(' x: %{x} <br>',
+                              'y: %{y} <br>',
+                              'value: %{z}',
+                              ' <extra></extra>')
+      )
+    fig <- layout(fig,  yaxis = list(autorange = "reversed", tickfont = list(size = 7), showline = TRUE, linecolor = toRGB("black")), xaxis = list(tickfont = list(size = 7), showline = TRUE, linecolor = toRGB("black")))
+    mat_plots[[i]] <- fig
+  }
+
+  plt <- subplot(mat_plots, nrows = 2, shareY = TRUE, shareX = TRUE)
+  return(plt)
+
 }
 
 ##########################################################
