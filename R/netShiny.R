@@ -319,7 +319,7 @@ netShiny <- function(Net.obj = NULL,
                                                  style = "padding: 0px",
                                                  cellArgs = list(style = "border-right: 1px solid silver"),
                                                  shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
-                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px"))),
+                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px")))
       ),
 
       #Summary Statistics tab
