@@ -239,8 +239,9 @@ netShiny <- function(Net.obj = NULL,
     custombsModal("data_settings", "Options for Mapping of Nodes", "nextButton_mapping", size = "large",
                   shinyWidgets::switchInput("gxe_mode", label = "GxE Mode", labelWidth = "80px", onLabel = "YES", offLabel = "NO", value = TRUE),
                   shiny::textInput("net_names", label = "Environment Names:", value = NULL),
-                  shiny::numericInput(inputId = "n_traits", label = "Number of Traits:", value = NULL, min = 1),
-                  shiny::textInput("trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
+                  #shiny::numericInput(inputId = "n_traits", label = "Number of Traits:", value = NULL, min = 1),
+                  shinyWidgets::multiInput(inputId = "trait_nodes", label = "Trait Nodes:", choices = all_node_nms, choiceNames = all_node_nms),
+                  shiny::textInput(inputId = "trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
                   shiny::fluidRow(
                     shiny::column(width = 2,
                                   shiny::actionButton(inputId = "prevButton_data_settings", label = "Previous")
@@ -511,7 +512,8 @@ netShiny <- function(Net.obj = NULL,
                                   cluster_algs = "Fast Greedy",
                                   hide_iso_markers = TRUE,
                                   hide_iso_traits = FALSE,
-                                  hide_iso_nodes = TRUE)
+                                  hide_iso_nodes = TRUE,
+                                  trait_nodes = NULL)
 
     # Show the model on start up ...
     if(is.null(Net.obj) || isTRUE(to_reconstruct)){
@@ -534,7 +536,7 @@ netShiny <- function(Net.obj = NULL,
       shinyjs::disable("dropdown_res")
     }
 
-    #reactive value that reacts when when either the data for environements are changed, or
+    #reactive value that reacts when when either the data for environments are changed, or
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
     #right panel network
@@ -1470,15 +1472,19 @@ netShiny <- function(Net.obj = NULL,
       #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
       if(isTRUE(input$gxe_mode)){
         #Check if number of traits passed is correct
-        if(!shiny::isTruthy(input$n_traits)){
-          vect_err <- append(vect_err, "No number of traits given")
+        n_traits <- length(input$trait_nodes)
+        if(n_traits < 1){
+          vect_err <- append(vect_err, "No traits chosen")
         }
-        else if(input$n_traits < 1){
-          vect_err <- append(vect_err, "Number of traits cannot be less than one")
-        }
-        else if(input$n_traits > length(vals$node_names)){
-          vect_err <- append(vect_err, "Number of traits cannot be more than the number of nodes")
-        }
+        # if(!shiny::isTruthy(input$n_traits)){
+        #   vect_err <- append(vect_err, "No number of traits given")
+        # }
+        # else if(input$n_traits < 1){
+        #   vect_err <- append(vect_err, "Number of traits cannot be less than one")
+        # }
+        # else if(input$n_traits > length(vals$node_names)){
+        #   vect_err <- append(vect_err, "Number of traits cannot be more than the number of nodes")
+        # }
 
         #Check if user passed something for trait types field
         if(!length(vect_err) && shiny::isTruthy(input$trait_types)){
@@ -1487,10 +1493,10 @@ netShiny <- function(Net.obj = NULL,
           if(shiny::isTruthy(input$trait_types) && is.null(trt_typs)){
             vect_err <- append(vect_err, "Incorrect format fot the grouping of traits")
           }
-          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) > input$n_traits){
+          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) > n_traits){
             vect_err <- append(vect_err, "Sum of number of trait groups given cannot be more than number of traits")
           }
-          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) < input$n_traits){
+          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) < n_traits){
             vect_err <- append(vect_err, "Sum of number of trait groups given cannot be less than number of traits")
           }
         }
@@ -1504,7 +1510,8 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(vals$sett_names <- net_names)
         shiny::isolate(names(vals$networks) <- net_names)
         if(vals$mode == "gxe"){
-          shiny::isolate(vals$n_traits <- input$n_traits)
+          shiny::isolate(vals$n_traits <- n_traits)
+          shiny::isolate(vals$trait_nodes <- input$trait_nodes)
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
@@ -1557,7 +1564,7 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$gxe_mode, {
       shiny::req(shiny::isTruthy(vals$networks))
       if(isFALSE(input$gxe_mode)){
-        shinyjs::hide(id = "n_traits")
+        shinyjs::hide(id = "trait_nodes")
         shinyjs::hide(id = "trait_types")
         vals$mode <- "general"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
@@ -1574,7 +1581,7 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Node"))
       }
       else{
-        shinyjs::show(id = "n_traits")
+        shinyjs::show(id = "trait_nodes")
         shinyjs::show(id = "trait_types")
         vals$mode <- "gxe"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
