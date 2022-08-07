@@ -240,8 +240,11 @@ netShiny <- function(Net.obj = NULL,
                   shinyWidgets::switchInput("gxe_mode", label = "GxE Mode", labelWidth = "80px", onLabel = "YES", offLabel = "NO", value = TRUE),
                   shiny::textInput("net_names", label = "Environment Names:", value = NULL),
                   #shiny::numericInput(inputId = "n_traits", label = "Number of Traits:", value = NULL, min = 1),
-                  shinyWidgets::multiInput(inputId = "trait_nodes", label = "Trait Nodes:", choices = all_node_nms, choiceNames = all_node_nms),
-                  shiny::textInput(inputId = "trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
+                  #shinyWidgets::multiInput(inputId = "trait_nodes", label = "Trait Nodes:", choices = all_node_nms, choiceNames = all_node_nms),
+                  #shiny::textInput(inputId = "trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
+                  textInput("trait_types", "Put trait groups separated by semicolon"),
+                  actionButton("trait_create_group", "Create"),
+                  uiOutput("trait_inputs"),
                   shiny::fluidRow(
                     shiny::column(width = 2,
                                   shiny::actionButton(inputId = "prevButton_data_settings", label = "Previous")
@@ -903,6 +906,7 @@ netShiny <- function(Net.obj = NULL,
     })
 
     shiny::observeEvent(input$size_apply, {
+      print("here")
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$size_custom)){
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         if(!shiny::isTruthy(vals$map_nodes$node_size)){
@@ -966,7 +970,7 @@ netShiny <- function(Net.obj = NULL,
     output$network_proxy_nodes <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      shiny::validate(shiny::need(!is.null(vals$map_nodes$node), "Getting proper data"))
+      shiny::validate(shiny::need(shiny::isTruthy(vals$map_nodes$node), "Getting proper data"))
       #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
       mat <- get_subnet(vals = vals, mat = mat)
@@ -981,7 +985,7 @@ netShiny <- function(Net.obj = NULL,
     output$network_proxy_nodes_2 <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
-      shiny::validate(shiny::need(!is.null(vals$map_nodes$node), "Getting proper data"))
+      shiny::validate(shiny::need(shiny::isTruthy(vals$map_nodes$node), "Getting proper data"))
       #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
       mat <- get_subnet(vals = vals, mat = mat)
@@ -1594,6 +1598,45 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = 0, max = 1, label = "Partial Correlations Traits"))
         shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Marker"))
       }
+    })
+
+    # to store observers and make sure only once is created per button
+    obs_trait_List <- list()
+
+    counter_trait_types <- shiny::reactiveValues(types = NULL)
+
+    observeEvent(input$trait_create_group, {
+      counter_trait_types$types <- trimws(strsplit(input$trait_types, split = ";")[[1]])
+    })
+
+    output$trait_inputs <- renderUI({
+      shiny::req(isTruthy(counter_trait_types$types))
+      buttons <- as.list(1:length(counter_trait_types$types))
+      buttons <- lapply(buttons, function(i) {
+        btName <- counter_trait_types$types[[i]]
+        # creates an observer only if it doesn't already exists
+        if (is.null(obs_trait_List[[btName]])) {
+          # make sure to use <<- to update global variable obsList
+          obs_trait_List[[btName]] <<- shiny::observeEvent(input[[btName]], {
+            #cat("Button ", i, "\n")
+            #cat("name: ", btName, "\n")
+            all_chosen <- NULL
+            diff_nms <- setdiff(counter_trait_types$types, btName)
+            print(diff_nms)
+            for(b in counter_trait_types$types){
+              all_chosen <- union(all_chosen, input[[b]])
+            }
+            #cat("all chosen: ", all_chosen, "\n")
+            for(b in diff_nms){
+              sel <- input[[b]]
+              choices <- setdiff(all_node_nms, setdiff(all_chosen, sel))
+              shinyWidgets::updateMultiInput(session = session, inputId = b, choices = choices, selected = sel)
+            }
+          })
+        }
+        shinyWidgets::multiInput(inputId = btName, label = btName, choices = all_node_nms)
+      }
+      )
     })
 
   }
