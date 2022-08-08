@@ -67,8 +67,8 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
   }
 
   else{
+    markers <- setdiff(vals$node_names, vals$trait_nodes)
     if(!is.null(input$cor_m)){
-      markers <- setdiff(vals$node_names, vals$trait_nodes)
       mat[markers, markers][abs(mat[markers, markers]) < input$cor_m] <- 0
       #mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
     }
@@ -80,10 +80,12 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
     mat <- Matrix::drop0(mat, tol = 0) #Returns sparse matrix with no explicit zeroes for opt.adj, thus removing diagonal 0 values
     nzvec <- which(Matrix::colSums(mat) == 0) #gets indices of traits and markers that do not have any links
     if(isTRUE(vals$hide_iso_markers) && isFALSE(vals$hide_iso_traits)){
-      nzvec <- nzvec[nzvec > vals$n_traits] #gets indices of only markers that do not have any links
+      #nzvec <- nzvec[nzvec > vals$n_traits] #gets indices of only markers that do not have any links
+      nzvec <- nzvec[match(markers, names(nzvec), nomatch = FALSE)]
     }
     else if(isFALSE(vals$hide_iso_markers) && isTRUE(vals$hide_iso_traits)){
-      nzvec <- nzvec[nzvec <= vals$n_traits] #gets indices of only traits that do not have any links
+      #nzvec <- nzvec[nzvec <= vals$n_traits] #gets indices of only traits that do not have any links
+      nzvec <- nzvec[match(vals$trait_nodes, names(nzvec), nomatch = FALSE)]
     }
     else if(isFALSE(vals$hide_iso_markers) && isFALSE(vals$hide_iso_traits)){
       nzvec <- numeric()
