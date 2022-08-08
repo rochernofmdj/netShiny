@@ -906,7 +906,6 @@ netShiny <- function(Net.obj = NULL,
     })
 
     shiny::observeEvent(input$size_apply, {
-      print("here")
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$size_custom)){
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         if(!shiny::isTruthy(vals$map_nodes$node_size)){
@@ -1465,7 +1464,6 @@ netShiny <- function(Net.obj = NULL,
       shiny::req(shiny::isTruthy(vals$networks))
       net_names <- trimws(strsplit(input$net_names, split = ",")[[1]])
       vect_err <- vector(mode = "character")
-      trt_typs <- NULL
       #Check if number of network names passed is correct
       if(length(net_names) > length(vals$networks)){
         vect_err <- append(vect_err, "Too many network names given")
@@ -1475,11 +1473,23 @@ netShiny <- function(Net.obj = NULL,
       }
       #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
       if(isTRUE(input$gxe_mode)){
-        #Check if number of traits passed is correct
-        n_traits <- length(input$trait_nodes)
-        if(n_traits < 1){
-          vect_err <- append(vect_err, "No traits chosen")
+        #Check if we have any error and show a notification about the error(s)
+       vect_err <- vector("character")
+        if(!shiny::isTruthy(input$trait_types)){
+          vect_err <- append(vect_err, "No traits given")
         }
+       if(length(vect_err) == 0){
+          tlist <- vector("list")
+          trt_typs <- data.frame("node" = character(), "node_group" = character())
+          for (t in counter_trait_types$types) {
+            if (!shiny::isTruthy(input[[t]])) {
+              vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
+            }
+            tlist[[t]] <- input[[t]]
+          }
+          trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
+       }
+
         # if(!shiny::isTruthy(input$n_traits)){
         #   vect_err <- append(vect_err, "No number of traits given")
         # }
@@ -1491,19 +1501,19 @@ netShiny <- function(Net.obj = NULL,
         # }
 
         #Check if user passed something for trait types field
-        if(!length(vect_err) && shiny::isTruthy(input$trait_types)){
-          trt_typs <- get_trait_groups(input$trait_types)
-          #Check if the trait grouping passed is correct
-          if(shiny::isTruthy(input$trait_types) && is.null(trt_typs)){
-            vect_err <- append(vect_err, "Incorrect format fot the grouping of traits")
-          }
-          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) > n_traits){
-            vect_err <- append(vect_err, "Sum of number of trait groups given cannot be more than number of traits")
-          }
-          else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) < n_traits){
-            vect_err <- append(vect_err, "Sum of number of trait groups given cannot be less than number of traits")
-          }
-        }
+        # if(!length(vect_err) && shiny::isTruthy(input$trait_types)){
+        #   trt_typs <- get_trait_groups(input$trait_types)
+        #   #Check if the trait grouping passed is correct
+        #   if(shiny::isTruthy(input$trait_types) && is.null(trt_typs)){
+        #     vect_err <- append(vect_err, "Incorrect format fot the grouping of traits")
+        #   }
+        #   else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) > n_traits){
+        #     vect_err <- append(vect_err, "Sum of number of trait groups given cannot be more than number of traits")
+        #   }
+        #   else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) < n_traits){
+        #     vect_err <- append(vect_err, "Sum of number of trait groups given cannot be less than number of traits")
+        #   }
+        # }
       }
       #Check if we have any error and show a notification about the error(s)
       if(length(vect_err) != 0){
@@ -1514,8 +1524,8 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(vals$sett_names <- net_names)
         shiny::isolate(names(vals$networks) <- net_names)
         if(vals$mode == "gxe"){
-          shiny::isolate(vals$n_traits <- n_traits)
-          shiny::isolate(vals$trait_nodes <- input$trait_nodes)
+          shiny::isolate(vals$n_traits <- length(counter_trait_types$types))
+          #shiny::isolate(vals$trait_nodes <- input$trait_nodes)
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
