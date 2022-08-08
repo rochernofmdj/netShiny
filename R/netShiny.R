@@ -910,7 +910,8 @@ netShiny <- function(Net.obj = NULL,
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         if(!shiny::isTruthy(vals$map_nodes$node_size)){
           if(vals$mode == "gxe"){
-            vals$map_nodes$node_size <- c(rep(30, vals$n_traits), rep(20, nrow(vals$map_nodes) - vals$n_traits))
+            #vals$map_nodes$node_size <- c(rep(30, vals$n_traits), rep(20, nrow(vals$map_nodes) - vals$n_traits))
+            vals$map_nodes$node_size <- ifelse(vals$map_nodes %in% vals$trait_nodes, 30, 20)
           }
           else{
             vals$map_nodes$node_size <- rep(25, nrow(vals$map_nodes))
@@ -938,12 +939,12 @@ netShiny <- function(Net.obj = NULL,
 
     shiny::observeEvent(input$all_traits, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
-      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[1:vals$n_traits])
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = vals$trait_nodes)
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$all_markers, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
-      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes[vals$n_traits+1:length(all_nodes)])
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = setdiff(vals$node_names, vals$trait_nodes))
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$reset_custom, {
