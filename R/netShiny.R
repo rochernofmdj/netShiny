@@ -242,9 +242,9 @@ netShiny <- function(Net.obj = NULL,
                   #shiny::numericInput(inputId = "n_traits", label = "Number of Traits:", value = NULL, min = 1),
                   #shinyWidgets::multiInput(inputId = "trait_nodes", label = "Trait Nodes:", choices = all_node_nms, choiceNames = all_node_nms),
                   #shiny::textInput(inputId = "trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
-                  textInput("trait_types", "Put trait groups separated by semicolon"),
-                  actionButton("trait_create_group", "Create"),
-                  uiOutput("trait_inputs"),
+                  shiny::textInput("trait_types", "Put trait groups separated by semicolons (;)"),
+                  shiny::actionButton("trait_create_group", "Create"),
+                  shiny::uiOutput("trait_inputs"),
                   shiny::fluidRow(
                     shiny::column(width = 2,
                                   shiny::actionButton(inputId = "prevButton_data_settings", label = "Previous")
@@ -1578,8 +1578,9 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$gxe_mode, {
       shiny::req(shiny::isTruthy(vals$networks))
       if(isFALSE(input$gxe_mode)){
-        shinyjs::hide(id = "trait_nodes")
-        shinyjs::hide(id = "trait_types")
+        #shinyjs::hide(id = "trait_nodes")
+        #shinyjs::hide(id = "trait_types")
+        shiny::isolate(shiny::updateTextInput(session = session, inputId = "trait_types", label = "Put groups separated by semicolons (;)", value = input$trait_types))
         vals$mode <- "general"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
         if(setequal(nm, sprintf("Environment %s", 1:length(vals$networks)))){
@@ -1595,8 +1596,9 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Node"))
       }
       else{
-        shinyjs::show(id = "trait_nodes")
-        shinyjs::show(id = "trait_types")
+        #shinyjs::show(id = "trait_nodes")
+        #shinyjs::show(id = "trait_types")
+        shiny::isolate(shiny::updateTextInput(session = session, inputId = "trait_types", label = "Put trait groups separated by semicolons (;)", value = input$trait_types))
         vals$mode <- "gxe"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
         if(setequal(nm, sprintf("Network %s", 1:length(vals$networks)))){
