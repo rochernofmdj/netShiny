@@ -1471,24 +1471,40 @@ netShiny <- function(Net.obj = NULL,
       else if (length(net_names) < length(vals$networks)){
         vect_err <- append(vect_err, "Too few network names given")
       }
-      #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
-      if(isTRUE(input$gxe_mode)){
-        #Check if we have any error and show a notification about the error(s)
-       vect_err <- vector("character")
-        if(!shiny::isTruthy(input$trait_types)){
-          vect_err <- append(vect_err, "No traits given")
-        }
-       if(length(vect_err) == 0){
-          tlist <- vector("list")
-          trt_typs <- data.frame("node" = character(), "node_group" = character())
-          for (t in counter_trait_types$types) {
-            if (!shiny::isTruthy(input[[t]])) {
-              vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
-            }
-            tlist[[t]] <- input[[t]]
+      vect_err <- vector("character")
+      if(!shiny::isTruthy(input$trait_types)){
+        vect_err <- append(vect_err, "No traits given")
+      }
+      if(length(vect_err) == 0){
+        tlist <- vector("list")
+        trt_typs <- data.frame("node" = character(), "node_group" = character())
+        for (t in counter_trait_types$types) {
+          if (!shiny::isTruthy(input[[t]])) {
+            vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
           }
-          trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
-       }
+          tlist[[t]] <- input[[t]]
+        }
+        trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
+      }
+      #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
+      if(isTRUE(input$gxe_mode) && !shiny::isTruthy(input$trait_types)){
+        vect_err <- append(vect_err, "No traits given")
+        #Check if we have any error and show a notification about the error(s)
+        # vect_err <- vector("character")
+        # if(!shiny::isTruthy(input$trait_types)){
+        #   vect_err <- append(vect_err, "No traits given")
+        # }
+       # if(length(vect_err) == 0){
+       #    tlist <- vector("list")
+       #    trt_typs <- data.frame("node" = character(), "node_group" = character())
+       #    for (t in counter_trait_types$types) {
+       #      if (!shiny::isTruthy(input[[t]])) {
+       #        vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
+       #      }
+       #      tlist[[t]] <- input[[t]]
+       #    }
+       #    trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
+       # }
 
         # if(!shiny::isTruthy(input$n_traits)){
         #   vect_err <- append(vect_err, "No number of traits given")
@@ -1525,7 +1541,7 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(names(vals$networks) <- net_names)
         if(vals$mode == "gxe"){
           shiny::isolate(vals$n_traits <- length(counter_trait_types$types))
-          #shiny::isolate(vals$trait_nodes <- input$trait_nodes)
+          shiny::isolate(vals$trait_nodes <- unlist(tlist))
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
