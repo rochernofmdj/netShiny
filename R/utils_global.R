@@ -68,11 +68,13 @@ getNZ <- function(vals, input, mat, diff = FALSE, to_plot = FALSE){
 
   else{
     if(!is.null(input$cor_m)){
-      mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
+      markers <- setdiff(vals$node_names, vals$trait_nodes)
+      mat[markers, markers][abs(mat[markers, markers]) < input$cor_m] <- 0
+      #mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes][abs(mat[(vals$n_traits+1):n_nodes, (vals$n_traits+1):n_nodes]) < input$cor_m] <- 0
     }
     if(!is.null(input$cor_t)){
-      mat[, 1:vals$n_traits][abs(mat[, 1:vals$n_traits]) < input$cor_t] <- 0
-      mat[1:vals$n_traits, ][abs(mat[1:vals$n_traits, ]) < input$cor_t] <- 0
+      mat[, vals$trait_nodes][abs(mat[, vals$trait_nodes]) < input$cor_t] <- 0
+      mat[vals$trait_nodes, ][abs(mat[vals$trait_nodes, ]) < input$cor_t] <- 0
     }
     diag(mat) <- 0  #Makes diagonal values 0
     mat <- Matrix::drop0(mat, tol = 0) #Returns sparse matrix with no explicit zeroes for opt.adj, thus removing diagonal 0 values
