@@ -103,22 +103,27 @@ get_vis_net <- function(vals, input, mat, g, lay){
   if(shiny::isTruthy(vals$map_nodes)){
     if(vals$mode == "gxe"){
       sel_by <- "Chromosome"
-      test.visn$nodes$Chromosome <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      #test.visn$nodes$Chromosome <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      test.visn$nodes$Chromosome <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
     }
     else{
       sel_by <- "Group"
-      test.visn$nodes$Group <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      #test.visn$nodes$Group <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      test.visn$nodes$Group <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
     }
-    test.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    #drtest.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    test.visn$nodes$color.background <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
     #igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
   }
   if(isTruthy(vals$map_nodes$node_size)){
-    test.visn$nodes$value <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_size
+    #test.visn$nodes$value <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_size
+    test.visn$nodes$value <- vals$map_nodes$node_size[match(sel_nodes, vals$map_nodes$node)]
   }
   else{
     if(vals$mode == "gxe"){
       n_traits <- sum(test.visn$nodes$id %in% vals$map_nodes$node[1:vals$n_traits])
-      test.visn$nodes$size <- c(rep(30, n_traits), rep(20, nrow(test.visn$nodes) - n_traits))
+      test.visn$nodes$size <- ifelse(sel_nodes %in% vals$trait_nodes, 30, 20)
+      #test.visn$nodes$size <- c(rep(30, n_traits), rep(20, nrow(test.visn$nodes) - n_traits))
     }
     else{
       test.visn$nodes$size <- rep(25, nrow(test.visn$nodes))
@@ -128,7 +133,8 @@ get_vis_net <- function(vals, input, mat, g, lay){
     test.visn$edges$value <- abs(igraph::E(g)$weight)
   }
   if(shiny::isTruthy(vals$map_nodes$font_size)){
-    test.visn$nodes$font.size <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$font_size
+    #test.visn$nodes$font.size <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$font_size
+    test.visn$nodes$font.size <- vals$map_nodes$font_size[match(sel_nodes, vals$map_nodes$node)]
   }
   else{
     test.visn$nodes$font.size <- 17
@@ -155,7 +161,7 @@ get_mat_plots <- function(vals) {
     nms <- dimnames(curr_env)[[1]]
     diag(curr_env) <- 0
     fig <-
-      plot_ly(
+      plotly::plot_ly(
         x = nms,
         y = nms,
         z = as.matrix(curr_env),
@@ -170,11 +176,11 @@ get_mat_plots <- function(vals) {
                               'value: %{z}',
                               ' <extra></extra>')
       )
-    fig <- layout(fig,  yaxis = list(autorange = "reversed", tickfont = list(size = 7), showline = TRUE, linecolor = toRGB("black")), xaxis = list(tickfont = list(size = 7), showline = TRUE, linecolor = toRGB("black")))
+    fig <- plotly::layout(fig,  yaxis = list(autorange = "reversed", tickfont = list(size = 7), showline = TRUE, linecolor = plotly::toRGB("black")), xaxis = list(tickfont = list(size = 7), showline = TRUE, linecolor = plotly::toRGB("black")))
     mat_plots[[i]] <- fig
   }
 
-  plt <- subplot(mat_plots, nrows = 2, shareY = TRUE, shareX = TRUE)
+  plt <- plotly::subplot(mat_plots, nrows = 2, shareY = TRUE, shareX = TRUE)
   return(plt)
 
 }
@@ -345,6 +351,13 @@ get_dif_net <- function(vals, input){
   edge_cols <- clrs[igraph::E(g)$weight]
   igraph::E(g)$color <- edge_cols
   igraph::E(g)$weight[igraph::E(g)$weight != 0] <- 1
+
+  # wdiff <- Matrix::drop0((mat1 - mat2))
+  # wdiff <- getNZ(vals = vals, input = input, mat = wdiff, diff = TRUE)
+  # wg <- igraph::graph_from_adjacency_matrix(wdiff, mode = "undirected", weighted = TRUE)
+  #
+  # igraph::E(g)$weight <- abs(igraph::E(wg)$weight)
+  # igraph::E(g)$value <- abs(igraph::E(wg)$weight)
   test.visn <- visNetwork::toVisNetworkData(g)
 
   sel_nodes <- dimnames(diff)[[1]]
