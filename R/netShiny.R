@@ -1595,8 +1595,6 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$gxe_mode, {
       shiny::req(shiny::isTruthy(vals$networks))
       if(isFALSE(input$gxe_mode)){
-        #shinyjs::hide(id = "trait_nodes")
-        #shinyjs::hide(id = "trait_types")
         shiny::isolate(shiny::updateTextInput(session = session, inputId = "trait_types", label = "Put groups separated by semicolons (;)", value = input$trait_types))
         vals$mode <- "general"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
@@ -1613,8 +1611,6 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Node"))
       }
       else{
-        #shinyjs::show(id = "trait_nodes")
-        #shinyjs::show(id = "trait_types")
         shiny::isolate(shiny::updateTextInput(session = session, inputId = "trait_types", label = "Put trait groups separated by semicolons (;)", value = input$trait_types))
         vals$mode <- "gxe"
         nm <- trimws(strsplit(input$net_names, split = ",")[[1]])
@@ -1643,20 +1639,14 @@ netShiny <- function(Net.obj = NULL,
       buttons <- as.list(1:length(counter_trait_types$types))
       buttons <- lapply(buttons, function(i) {
         btName <- counter_trait_types$types[[i]]
-        # creates an observer only if it doesn't already exists
         if (is.null(obs_trait_List[[btName]])) {
-          # make sure to use <<- to update global variable obsList
           obs_trait_List[[btName]] <<- shiny::observeEvent(input[[btName]], {
-            #cat("Button ", i, "\n")
-            #cat("name: ", btName, "\n")
             all_chosen <- NULL
             diff_nms <- setdiff(counter_trait_types$types, btName)
-            print(diff_nms)
-            for(b in counter_trait_types$types){
+            for (b in counter_trait_types$types) {
               all_chosen <- union(all_chosen, input[[b]])
             }
-            #cat("all chosen: ", all_chosen, "\n")
-            for(b in diff_nms){
+            for (b in diff_nms) {
               sel <- input[[b]]
               choices <- setdiff(all_node_nms, setdiff(all_chosen, sel))
               shinyWidgets::updateMultiInput(session = session, inputId = b, choices = choices, selected = sel)

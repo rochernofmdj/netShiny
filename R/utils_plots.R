@@ -745,6 +745,7 @@ bootstrap_func <- function(vals, mkr, new_res){
 
   for (i in vals$sett_names){
     mat <- vals$networks[[i]][, mkr]
+    #POTENTIAL BUG
     mks_all <- vals$node_names[which(mat != 0)]
     mks_all <- mks_all[mks_all != mkr]
     tab_new <- tab[tab$environment == i, ]
