@@ -1443,8 +1443,7 @@ netShiny <- function(Net.obj = NULL,
       args_net <- paste("net_", args_netphenogeno[-1], "_start", sep = "")
       args_sel <- paste("sel_", args_selectnet, "_start", sep = "")
       args_all <- c(args_net, args_sel, "sel_net_tag", "startup_run", "prevButton_reconstruction")
-      #vals$node_names <- colnames(uploadedFiles$files[[1]])
-      vals$node_names <- unique(unlist(lapply(uploadedFiles$files, function(x) dimnames(x)[[2]])))
+      vals$node_names <- unique(unlist(lapply(uploadedFiles$files, colnames)))
       sapply(c(args_all, "net_method_start", "file_names", "adv_op"), shinyjs::disable)
 
       vals$networks <- perform_startup_recon(val_nets = vals$networks, files = uploadedFiles$files, l_args = vals$start_up_args)
@@ -1644,7 +1643,7 @@ netShiny <- function(Net.obj = NULL,
       buttons <- lapply(buttons, function(i) {
         btName <- counter_trait_types$types[[i]]
         if (is.null(obs_trait_List[[btName]])) {
-          obs_trait_List[[btName]] <<- shiny::observeEvent(input[[btName]], {
+          obs_trait_List[[btName]] <- shiny::observeEvent(input[[btName]], {
             all_chosen <- NULL
             diff_nms <- setdiff(counter_trait_types$types, btName)
             for (b in counter_trait_types$types) {
@@ -1652,12 +1651,12 @@ netShiny <- function(Net.obj = NULL,
             }
             for (b in diff_nms) {
               sel <- input[[b]]
-              choices <- setdiff(all_node_nms, setdiff(all_chosen, sel))
+              choices <- setdiff(vals$node_names, setdiff(all_chosen, sel))
               shinyWidgets::updateMultiInput(session = session, inputId = b, choices = choices, selected = sel)
             }
           })
         }
-        shinyWidgets::multiInput(inputId = btName, label = btName, choices = all_node_nms)
+        shinyWidgets::multiInput(inputId = btName, label = btName, choices = vals$node_names)
       }
       )
     })
