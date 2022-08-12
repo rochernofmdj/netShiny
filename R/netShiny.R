@@ -109,7 +109,10 @@ netShiny <- function(Net.obj = NULL,
     )
   )
 
+
+  old_options <- withr::local_options()
   withr::local_options(list(spinner.color = "#007c00", spinner.size = 2))
+  on.exit(old_options)
   shinyWidgets::useSweetAlert()
 
   body <- shinydashboard::dashboardBody(
@@ -1172,7 +1175,7 @@ netShiny <- function(Net.obj = NULL,
     }, ignoreInit = TRUE)
 
     futureData <- shiny::reactiveValues(data10 = resamples)
-    myFuture <- NULL
+    myFuture <- shiny::reactiveValues(futureData = resamples)
 
     shiny::observeEvent(input$unc_check_confirm, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
@@ -1193,7 +1196,7 @@ netShiny <- function(Net.obj = NULL,
         l_args <- get_args_recon(input = input, start_up = FALSE)
 
         list_sett <- lapply(uploadedFiles$files, function(df) replicate(n_res, df[sample(1:nr, size = nr, replace = TRUE), ], simplify = FALSE))
-        myFuture <<- future::future({
+        myFuture$futureData <- future::future({
           for(i in 1:len_f){
             for(j in 1:n_res){
               net_rec <- netgwas::netphenogeno(data = list_sett[[i]][[j]],
@@ -1222,7 +1225,7 @@ netShiny <- function(Net.obj = NULL,
         promises::then(
           myFuture,
           onFulfilled = function(value) {
-            futureData$data10 <<- value
+            futureData$data10 <- value
           },
           onRejected = NULL
         )
@@ -1625,8 +1628,9 @@ netShiny <- function(Net.obj = NULL,
       }
     })
 
-    # to store observers and make sure only once is created per button
-    obs_trait_List <- list()
+
+    #To store observers
+    obs_trait_List <- reactiveValues()
 
     counter_trait_types <- shiny::reactiveValues(types = NULL)
 
