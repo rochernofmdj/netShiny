@@ -71,7 +71,7 @@ netShiny <- function(Net.obj = NULL,
     shinyWidgets::setSliderColor(rep("#007c00", 3), c(1, 2, 3)),
     shinyjs::useShinyjs(),
     shinydashboard::sidebarMenu(id = "tabs",
-                                shinydashboard::menuItem("Networks", tabName = "networks", icon = shiny::icon("project-diagram")),
+                                shinydashboard::menuItem("Networks", tabName = "networks", icon = shiny::icon("diagram-project")),
                                 shinydashboard::menuItem("Summary Statistics", tabName = "summ_stats", icon = shiny::icon("stats", lib = "glyphicon")),
                                 shinydashboard::menuItem("Weights Analysis", tabName = "net", icon = shiny::icon("chart-line")),
                                 shinydashboard::menuItem("Centrality Measures", tabName = "centrality", icon = shiny::icon("align-center")),
@@ -91,7 +91,7 @@ netShiny <- function(Net.obj = NULL,
                                 # shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
-                                shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("search"), btnReset = shiny::icon("times"), width = "100%"),
+                                shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("magnifying-glass"), btnReset = shiny::icon("xmark"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
                                 #shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = "Fast Greedy"),
                                 shiny::tags$head(
@@ -103,7 +103,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::splitLayout(cellWidths = c("28%", "28%", "28%"),
                                                    shinyWidgets::actionBttn("subgraph", label = "subnet", style = "simple", size = "sm", block = TRUE),
                                                    shinyWidgets::actionBttn("print_network", label = NULL, icon = shiny::icon("print"), style = "simple", size = "sm", block = TRUE),
-                                                   shinyWidgets::actionBttn("customize", label = "", icon = icon("cogs"), style = "simple", size = "sm", block = TRUE)
+                                                   shinyWidgets::actionBttn("customize", label = "", icon = icon("gears"), style = "simple", size = "sm", block = TRUE)
                                 )
 
     )
@@ -353,7 +353,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    shiny::tags$h3("Plot Settings"),
                                                                    shiny::numericInput(inputId = "par_cor_bins", label = "Bins", min = 0, value = 15),
                                                                    shiny::numericInput(inputId = "par_cor_breaks", label = "X-axis Breaks", min = 0, value = 20),
-                                                                   circle = TRUE, status = "primary", icon = shiny::icon("cog"),
+                                                                   circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to change plot's settings")
                                                                  ),
                                                                  shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px")))
@@ -401,7 +401,7 @@ netShiny <- function(Net.obj = NULL,
 
                                   )
                                 ),
-                                circle = TRUE, status = "primary", icon = shiny::icon("cog"), inputId = "dropdown_res",
+                                circle = TRUE, status = "primary", icon = shiny::icon("gear"), inputId = "dropdown_res",
                                 tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                               ),
                               shinycssloaders::withSpinner(
@@ -423,7 +423,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::tags$h3("Plot Settings"),
                                 shinyWidgets::materialSwitch(inputId = "cen_meas_col_switch", label = "Color by Group", value = TRUE, status = "primary"),
                                 shiny::selectInput(inputId = "cen_meas_leg_pos", label = "Legend Position", choices = c("right", "left", "bottom", "top"), selected = "bottom"),
-                                circle = TRUE, status = "primary", icon = shiny::icon("cog"),
+                                circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                 tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                               ),
                               shinycssloaders::withSpinner(
@@ -445,7 +445,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          shiny::tags$h3("Table Settings"),
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_table", label = "", choices = list("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
                                                                                          shiny::selectInput(inputId = "dist_meas_table", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra"), selected = "Euclidean"),
-                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
+                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
                                                                                        shinycssloaders::withSpinner(shiny::uiOutput("distances_table"))
@@ -458,7 +458,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_plot", label = "", choices = c("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
                                                                                          shiny::selectInput(inputId = "dist_meas_plot", label = "Distance Measure", choices = c("Euclidean", "Manhattan", "Canberra"), selected = "Euclidean", multiple = TRUE),
                                                                                          shiny::checkboxInput(inputId = "log_check", label = "Log Scale", value = FALSE),
-                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("cog"), size = "sm", width = "300px",
+                                                                                         circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
                                                                                        shinycssloaders::withSpinner(shiny::plotOutput("distances_plot"))
@@ -467,13 +467,13 @@ netShiny <- function(Net.obj = NULL,
                                                  ),
                                                  shiny::tabPanel("Venn Diagram",
                                                                  shinyWidgets::dropMenu(
-                                                                   shinyWidgets::actionBttn(inputId = "venn_diag", icon = shiny::icon("cog"), style = "material-circle", color = "default", size = "sm"),
+                                                                   shinyWidgets::actionBttn(inputId = "venn_diag", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
                                                                    shiny::tags$h3("Choose Networks"),
                                                                    shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
                                                                    #shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE),
                                                                    shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE
-                                                                   #circle = TRUE, status = "primary", icon = shiny::icon("cog"),
+                                                                   #circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                                                    #tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
                                                                  ),
                                                                  shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px"))),
@@ -487,7 +487,7 @@ netShiny <- function(Net.obj = NULL,
   # Put them together into a dashboardPage
   ui <- shinydashboard::dashboardPage(
     shinydashboard::dashboardHeader(title = "netShiny",
-                                    shiny::tags$li(shiny::actionLink("settings_button", label = "", icon = shiny::icon("cog")),
+                                    shiny::tags$li(shiny::actionLink("settings_button", label = "", icon = shiny::icon("gear")),
                                                    class = "dropdown"), titleWidth = 100),
     sidebar,
     body
