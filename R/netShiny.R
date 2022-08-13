@@ -729,7 +729,7 @@ netShiny <- function(Net.obj = NULL,
       else if(input$tabs == "unc_check"){
         sapply(controls, shinyjs::hide)
         sapply("marker", shinyjs::show)
-        if(is.null(futureData$data10)){
+        if(is.null(bootstrap_dat$dat_bootstrap)){
           shinyjs::disable("marker")
         }
       }
@@ -1150,8 +1150,8 @@ netShiny <- function(Net.obj = NULL,
 
     output$unc_check_plot <- plotly::renderPlotly({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      shiny::validate(shiny::need(!is.null(futureData$data10), "No Resampling Data"))
-      p <- bootstrap_func(vals = vals, mkr = input$marker, new_res = futureData$data10)
+      shiny::validate(shiny::need(!is.null(bootstrap_dat$dat_bootstrap), "No Resampling Data"))
+      p <- bootstrap_func(vals = vals, mkr = input$marker, new_res = bootstrap_dat$dat_bootstrap)
       shinyjs::enable("marker")
       p
     })
@@ -1174,8 +1174,8 @@ netShiny <- function(Net.obj = NULL,
       )
     }, ignoreInit = TRUE)
 
-    futureData <- shiny::reactiveValues(data10 = resamples)
-    myFuture <- shiny::reactiveValues(futureData = resamples)
+    bootstrap_dat <- shiny::reactiveValues(dat_bootstrap = resamples)
+    promise_boot <- shiny::reactiveValues(promise_dat = resamples)
 
     shiny::observeEvent(input$unc_check_confirm, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
@@ -1191,12 +1191,12 @@ netShiny <- function(Net.obj = NULL,
         for(i in 1:length(new_l)){
           new_l[[i]] <- vector("list", n_res)
         }
-        progress <- ipc::AsyncProgress$new(message = "Bootstrapping Procedure")
+        progress <- ipc::AsyncProgress$new(message = "Boostrapping Procedure")
         new_rec <- NULL
         l_args <- get_args_recon(input = input, start_up = FALSE)
 
         list_sett <- lapply(uploadedFiles$files, function(df) replicate(n_res, df[sample(1:nr, size = nr, replace = TRUE), ], simplify = FALSE))
-        myFuture$futureData <- future::future({
+        promise_boot$promise_dat <- future::future({
           for(i in 1:len_f){
             for(j in 1:n_res){
               net_rec <- netgwas::netphenogeno(data = list_sett[[i]][[j]],
@@ -1223,9 +1223,9 @@ netShiny <- function(Net.obj = NULL,
         })
 
         promises::then(
-          myFuture,
+          promise_boot$promise_dat,
           onFulfilled = function(value) {
-            futureData$data10 <- value
+            bootstrap_dat$dat_bootstrap <- value
           },
           onRejected = NULL
         )
@@ -1238,8 +1238,8 @@ netShiny <- function(Net.obj = NULL,
       if(inva()){
         shiny::invalidateLater(1000)
       }
-      if(!is.null(myFuture)){
-        if(isTRUE(future::resolved(myFuture))){
+      if(!is.null(promise_boot)){
+        if(isTRUE(future::resolved(promise_boot))){
           inva(FALSE)
           shinyjs::enable("dropdown_res")
         }
