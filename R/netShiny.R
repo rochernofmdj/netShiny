@@ -776,7 +776,7 @@ netShiny <- function(Net.obj = NULL,
             shinyjs::show("cor_m")
           }
         }
-        else if(input$tab_differences == "Network Distances"){
+        else if(input$tab_differences == "Network Distances" || input$tab_differences == "Venn Diagram"){
           sapply(controls, shinyjs::hide)
         }
         else{

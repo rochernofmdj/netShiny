@@ -493,7 +493,11 @@ get_venn_diag <- function(vals, input){
     }
   }
 
-  p <- ggVennDiagram::ggVennDiagram(settings, color = "black", lwd = 0.8, lty = 1)
+  p <- ggVennDiagram::ggVennDiagram(settings, color = "black", lwd = 0.8, lty = 1) +
+    ggplot2::scale_fill_gradient(low = "white", high = "red") +
+    ggplot2::theme(legend.position = "none")
+    ggplot2::theme_void()
+
   return(p)
 }
 
