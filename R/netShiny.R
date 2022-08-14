@@ -19,10 +19,22 @@ netShiny <- function(Net.obj = NULL,
                      mapping = NULL,
                      resamples = NULL){
 
-
-
-
   future::plan(future.callr::callr)
+
+  #Check if argument passed are defined
+  if (!missing(Net.obj)) {
+    string_net.obj <- deparse(substitute(Net.obj))
+    if (!exists(string_net.obj)) stop(paste0("Object '", string_net.obj, "' not found"))
+
+  }
+  if (!missing(mapping)) {
+    string_mapping <- deparse(substitute(mapping))
+    if (!exists(string_mapping)) stop(paste0("Object '", string_mapping, "' not found"))
+  }
+  if (!missing(resamples)) {
+    string_resamples <- deparse(substitute(resamples))
+    if (!exists(string_resamples)) stop(paste0("Object '", string_resamples, "' not found"))
+  }
 
   sett_nms <- NULL
   all_node_nms <- NULL
