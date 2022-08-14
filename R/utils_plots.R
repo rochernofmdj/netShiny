@@ -493,19 +493,7 @@ get_venn_diag <- function(vals, input){
     }
   }
 
-  venn <- ggVennDiagram::Venn(settings)
-  data <- ggVennDiagram::process_data(venn)
-
-  p <- ggplot2::ggplot() +
-    # change mapping of color filling
-    ggplot2::geom_sf(ggplot2::aes(fill = id), data = ggVennDiagram::venn_region(data), show.legend = FALSE) +
-    # adjust edge size and color
-    ggplot2::geom_sf(ggplot2::aes(color = id), size = 2, data = ggVennDiagram::venn_setedge(data), show.legend = FALSE) +
-    # show set label in bold
-    ggplot2::geom_sf_text(ggplot2::aes(label = name), fontface = "bold", data = ggVennDiagram::venn_setlabel(data)) +
-    # add a alternative region name
-    ggplot2::geom_sf_label(ggplot2::aes(label = count), data = ggVennDiagram::venn_region(data), alpha = 0.5) +
-    ggplot2::theme_void()
+  p <- ggVennDiagram::ggVennDiagram(settings, color = "black", lwd = 0.8, lty = 1)
   return(p)
 }
 
