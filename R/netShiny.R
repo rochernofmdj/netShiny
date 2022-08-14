@@ -94,18 +94,10 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::sliderInput(inputId = "cor_m", "Partial Correlations Markers", min = 0, max = 1, value = 0),
                                 shiny::selectInput("net1", "Left Panel", sett_nms, selected = sett_nms[1]),
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
-                                # shiny::selectInput("layout", "Layout", c("Automatic",
-                                #                                          "Circle",
-                                #                                          "Fruchterman-Reingold",
-                                #                                          "Grid.2D",
-                                #                                          "Kamada-Kawai" = "kk",
-                                #                                          "Tree"), selected = "Automatic"),
-                                # shiny::sliderInput("roundness", "Edge Curviness", min = 0, max = 1, value = 0),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("magnifying-glass"), btnReset = shiny::icon("xmark"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
-                                #shiny::selectInput("cluster_algs", "Clustering Algorithm", c("Fast Greedy", "Edge Betweenness"), selected = "Fast Greedy"),
                                 shiny::tags$head(
                                   shiny::tags$style(shiny::HTML('#subgraph{color:black; background-color:#F5F2F2}
                                   #customize{color:black; background-color:#F5F2F2}
@@ -121,10 +113,6 @@ netShiny <- function(Net.obj = NULL,
     )
   )
 
-
-  old_options <- withr::local_options()
-  withr::local_options(list(spinner.color = "#007c00", spinner.size = 2))
-  on.exit(old_options)
   shinyWidgets::useSweetAlert()
 
   body <- shinydashboard::dashboardBody(
@@ -175,14 +163,6 @@ netShiny <- function(Net.obj = NULL,
                                   shinyWidgets::pickerInput(inputId = "net_method_start", label = "method", choices = c("Gibbs sampling" = "gibbs",
                                                                                                                         "approximation method" = "approx",
                                                                                                                         "nonparanormal" = "npn"), selected = "npn"),
-                                  # shinyWidgets::checkboxGroupButtons(inputId = "net_method_start2", label = "Method",
-                                  #                                    #checkIcon = list(yes = icon("check")),
-                                  #                                    choices = c("Gibbs" = "gibbs", "Approximation" = "approx", "Nonparanormal" = "npn"),
-                                  #                                    checkIcon = list(
-                                  #                                      yes = tags$i(class = "fa fa-check-square",
-                                  #                                                   style = "color: steelblue"),
-                                  #                                      no = tags$i(class = "fa fa-square-o",
-                                  #                                                  style = "color: steelblue"))),
                                   shiny::textInput(inputId = "net_rho_start", label = "rho (decreasing sequence of non-negative numbers that control the sparsity level)", value = "NULL"),
                                   shiny::numericInput(inputId = "net_n.rho_start", label = "n.rho (number of regularization parameters)", value = 10),
                                   shiny::numericInput(inputId = "net_rho.ratio_start", label = "rho.ratio (distance between the elements of rho sequence)",
@@ -212,7 +192,7 @@ netShiny <- function(Net.obj = NULL,
                     )
                   ),
                   shiny::tags$head(shiny::tags$style("#modalStartup_reconstruction .modal-footer{ display:none}"))),
-    ##nothing2 needs to be removed
+    ##NOTHING 2 NEEDS TO BE REMOVED
     custombsModal("startup_mapping", "File for Mapping of Nodes", "nothing2", size = "large",
                   shiny::fileInput("mapping_upload", "Choose File for Mapping",
                                    multiple = FALSE,
@@ -254,9 +234,6 @@ netShiny <- function(Net.obj = NULL,
     custombsModal("data_settings", "Options for Mapping of Nodes", "nextButton_mapping", size = "large",
                   shinyWidgets::switchInput("gxe_mode", label = "GxE Mode", labelWidth = "80px", onLabel = "YES", offLabel = "NO", value = TRUE),
                   shiny::textInput("net_names", label = "Environment Names:", value = NULL),
-                  #shiny::numericInput(inputId = "n_traits", label = "Number of Traits:", value = NULL, min = 1),
-                  #shinyWidgets::multiInput(inputId = "trait_nodes", label = "Trait Nodes:", choices = all_node_nms, choiceNames = all_node_nms),
-                  #shiny::textInput(inputId = "trait_types", value = NULL, label = "Grouping of Traits:", placeholder =  "e.g. Harvest:4, Intermediate:5, Physiological:10"),
                   shiny::textInput("trait_types", "Put trait groups separated by semicolons (;)"),
                   shiny::actionButton("trait_create_group", "Create"),
                   shiny::uiOutput("trait_inputs"),
@@ -334,18 +311,12 @@ netShiny <- function(Net.obj = NULL,
 
       #Networks tab
       shinydashboard::tabItem(tabName = "networks",
-                              # shiny::splitLayout(cellWidths = c("50%", "50%"),
-                              #                    style = "padding: 0px",
-                              #                    cellArgs = list(style = "border-right: 1px solid silver"),
-                              #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
-                              #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px"))),
-
                               shiny::tabsetPanel(id = "tabs_net_mat",
                                                  shiny::tabPanel("Networks", shiny::splitLayout(cellWidths = c("50%", "50%"),
                                                                                                    style = "padding: 0px",
                                                                                                    cellArgs = list(style = "border-right: 1px solid silver"),
-                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
-                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px")))
+                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px"), color = "#007c00", size = 2),
+                                                                                                   shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px"), color = "#007c00", size = 2))
                                                  ),
                                                  shiny::tabPanel("Matrices",
                                                                  shinyWidgets::dropMenu(
@@ -355,7 +326,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    hideOnClick = TRUE),
                                                                  shiny::fillPage(
                                                    tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 100px) !important;}"),
-                                                   shinycssloaders::withSpinner(plotly::plotlyOutput("mat_plots", width = "100%", height = "100%"))
+                                                   shinycssloaders::withSpinner(plotly::plotlyOutput("mat_plots", width = "100%", height = "100%"), color = "#007c00", size = 2)
                                                  ))
 
                               )
@@ -365,7 +336,7 @@ netShiny <- function(Net.obj = NULL,
       #Summary Statistics tab
       shinydashboard::tabItem(tabName = "summ_stats",
                               shiny::tabsetPanel(id = "tabs_summ_stats",
-                                                 shiny::tabPanel("Metrics", shinycssloaders::withSpinner(shiny::plotOutput("summary_statistics", height = "750px"))),
+                                                 shiny::tabPanel("Metrics", shinycssloaders::withSpinner(shiny::plotOutput("summary_statistics", height = "750px")), color = "#007c00", size = 2),
                                                  shiny::tabPanel(title = shiny::textOutput("title_par_cors"),
                                                                  shinyWidgets::dropdownButton(
                                                                    shiny::tags$h3("Plot Settings"),
@@ -374,7 +345,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to change plot's settings")
                                                                  ),
-                                                                 shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px")))
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px")), color = "#007c00", size = 2)
                               )
 
       ),
@@ -385,10 +356,10 @@ netShiny <- function(Net.obj = NULL,
                                                  shiny::tabPanel("Communities", shiny::splitLayout(cellWidths = c("50%", "50%"),
                                                                                                    style = "padding: 0px",
                                                                                                    cellArgs = list(style = "border-right: 1px solid silver"),
-                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot", height = "1000px")),
-                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot2", height = "1000px")))
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot", height = "1000px"), color = "#007c00", size = 2),
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot2", height = "1000px")), color = "#007c00", size = 2)
                                                  ),
-                                                 shiny::tabPanel("Modularity",  shinycssloaders::withSpinner(shiny::plotOutput("mods")))
+                                                 shiny::tabPanel("Modularity",  shinycssloaders::withSpinner(shiny::plotOutput("mods")), color = "#007c00", size = 2)
 
                               )
       ),
@@ -424,13 +395,15 @@ netShiny <- function(Net.obj = NULL,
                               ),
                               shinycssloaders::withSpinner(
                                 plotly::plotlyOutput("unc_check_plot", height = "750px", width = "100%"),
+                                color = "#007c00", size = 2
                               )
       ),
 
       #Netphenogeno tab
       shinydashboard::tabItem(tabName = "net",
                               shinycssloaders::withSpinner(
-                                plotly::plotlyOutput("net_plot", width = "100%", height = "750px")
+                                plotly::plotlyOutput("net_plot", width = "100%", height = "750px"),
+                                color = "#007c00", size = 2
                               )
 
       ),
@@ -445,7 +418,8 @@ netShiny <- function(Net.obj = NULL,
                                 tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                               ),
                               shinycssloaders::withSpinner(
-                                shiny::plotOutput("centrality_plots", height = "750px")
+                                shiny::plotOutput("centrality_plots", height = "750px"),
+                                color = "#007c00", size = 2
                               )
       ),
 
@@ -453,9 +427,9 @@ netShiny <- function(Net.obj = NULL,
       shinydashboard::tabItem(tabName = "differences",
                               shiny::tabsetPanel(id = "tab_differences",
                                                  shiny::tabPanel("Difference Networks",
-                                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("diff_nets", height = "750px"))),
+                                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("diff_nets", height = "750px")), color = "#007c00", size = 2),
                                                  shiny::tabPanel("Difference Table",
-                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_table"))),
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_table")), color = "#007c00", size = 2),
                                                  shiny::tabPanel("Network Distances",
                                                                  shiny::fluidRow(
                                                                    shinydashboard::box(title = shiny::textOutput("title_dist_table"), width = 12, solidHeader = TRUE, status = "primary",
@@ -466,7 +440,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
-                                                                                       shinycssloaders::withSpinner(shiny::uiOutput("distances_table"))
+                                                                                       shinycssloaders::withSpinner(shiny::uiOutput("distances_table"), color = "#007c00", size = 2)
                                                                    )
                                                                  ),
                                                                  shiny::fluidRow(
@@ -479,7 +453,7 @@ netShiny <- function(Net.obj = NULL,
                                                                                          circle = TRUE, status = "primary", icon = shiny::icon("gear"), size = "sm", width = "300px",
                                                                                          tooltip = shinyWidgets::tooltipOptions(title = "Click to plot's settings")
                                                                                        ),
-                                                                                       shinycssloaders::withSpinner(shiny::plotOutput("distances_plot"))
+                                                                                       shinycssloaders::withSpinner(shiny::plotOutput("distances_plot"), color = "#007c00", size = 2)
                                                                    )
                                                                  )
                                                  ),
@@ -488,15 +462,12 @@ netShiny <- function(Net.obj = NULL,
                                                                    shinyWidgets::actionBttn(inputId = "venn_diag", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
                                                                    shiny::tags$h3("Choose Networks"),
                                                                    shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
-                                                                   #shiny::selectInput(inputId = "venn_diag_sel", label = "Select Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE),
                                                                    shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE
-                                                                   #circle = TRUE, status = "primary", icon = shiny::icon("gear"),
-                                                                   #tooltip = shinyWidgets::tooltipOptions(title = "Click to select networks")
                                                                  ),
-                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px"))),
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px")), color = "#007c00", size = 2),
                                                  shiny::tabPanel("Nodes Sets",
-                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")))
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")), color = "#007c00", size = 2)
                               )
       )
     )
@@ -997,7 +968,6 @@ netShiny <- function(Net.obj = NULL,
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(shiny::isTruthy(vals$map_nodes$node), "Getting proper data"))
-      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
       mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
@@ -1012,7 +982,6 @@ netShiny <- function(Net.obj = NULL,
       shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(shiny::isTruthy(vals$map_nodes$node), "Getting proper data"))
-      #if(!is.null(vals$map_nodes)) shiny::req(all(colnames(vals$map_nodes) %in% c("node","node_group","node_color")))
       mat <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
       mat <- get_subnet(vals = vals, mat = mat)
       shiny::validate(shiny::need(length(mat@x) > 0, 'No Connections'))
@@ -1035,10 +1004,6 @@ netShiny <- function(Net.obj = NULL,
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       p <- get_summ_stats_plot(vals = vals, input = input)
       p
-      # if(shiny::isTruthy(input$cor_m)){
-      #   p <- get_summ_stats_plot(vals = vals, input = input)
-      #   p
-      # }
 
     })
 
@@ -1520,52 +1485,6 @@ netShiny <- function(Net.obj = NULL,
         }
         trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
       }
-      #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
-      # if(isTRUE(input$gxe_mode) && !shiny::isTruthy(input$trait_types)){
-      #   print("hererere")
-      #   vect_err <- append(vect_err, "No traits given")
-        #Check if we have any error and show a notification about the error(s)
-        # vect_err <- vector("character")
-        # if(!shiny::isTruthy(input$trait_types)){
-        #   vect_err <- append(vect_err, "No traits given")
-        # }
-       # if(length(vect_err) == 0){
-       #    tlist <- vector("list")
-       #    trt_typs <- data.frame("node" = character(), "node_group" = character())
-       #    for (t in counter_trait_types$types) {
-       #      if (!shiny::isTruthy(input[[t]])) {
-       #        vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
-       #      }
-       #      tlist[[t]] <- input[[t]]
-       #    }
-       #    trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
-       # }
-
-        # if(!shiny::isTruthy(input$n_traits)){
-        #   vect_err <- append(vect_err, "No number of traits given")
-        # }
-        # else if(input$n_traits < 1){
-        #   vect_err <- append(vect_err, "Number of traits cannot be less than one")
-        # }
-        # else if(input$n_traits > length(vals$node_names)){
-        #   vect_err <- append(vect_err, "Number of traits cannot be more than the number of nodes")
-        # }
-
-        #Check if user passed something for trait types field
-        # if(!length(vect_err) && shiny::isTruthy(input$trait_types)){
-        #   trt_typs <- get_trait_groups(input$trait_types)
-        #   #Check if the trait grouping passed is correct
-        #   if(shiny::isTruthy(input$trait_types) && is.null(trt_typs)){
-        #     vect_err <- append(vect_err, "Incorrect format fot the grouping of traits")
-        #   }
-        #   else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) > n_traits){
-        #     vect_err <- append(vect_err, "Sum of number of trait groups given cannot be more than number of traits")
-        #   }
-        #   else if(shiny::isTruthy(input$trait_types) && sum(trt_typs$freq) < n_traits){
-        #     vect_err <- append(vect_err, "Sum of number of trait groups given cannot be less than number of traits")
-        #   }
-        # }
-      #}
       #Check if we have any error and show a notification about the error(s)
       if(length(vect_err) != 0){
         shiny::showNotification(paste(vect_err, collapse = "\n"), type = "error")
@@ -1583,11 +1502,6 @@ netShiny <- function(Net.obj = NULL,
         vals$map_nodes <- map_nodes_to_group(vals = vals, input = input, trt_typs = trt_typs)
         vals$map_nodes <- complete_df(vals = vals)
         vals$original_colors <- vals$map_nodes$node_color
-        #Get all the names of the markers that have at least one connections
-        #with any other marker (or trait)
-        #av_mks <- unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input))
-        #av_mks <- unique(av_mks)
-        #av_mks <- av_mks[order(match(av_mks, vals$node_names))]
         av_mks <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
         av_mks <- av_mks[order(match(av_mks, vals$node_names))]
         shiny::updateSelectInput(session, "marker", choices = av_mks)
