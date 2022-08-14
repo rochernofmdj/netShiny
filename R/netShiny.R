@@ -1500,8 +1500,8 @@ netShiny <- function(Net.obj = NULL,
       else if (length(net_names) < length(vals$networks)){
         vect_err <- append(vect_err, "Too few network names given")
       }
-      vect_err <- vector("character")
-      if(!shiny::isTruthy(input$trait_types)){
+
+      else if(!shiny::isTruthy(input$trait_types) && isTRUE(input$gxe_mode)){
         vect_err <- append(vect_err, "No traits given")
       }
       if(length(vect_err) == 0){
@@ -1509,15 +1509,21 @@ netShiny <- function(Net.obj = NULL,
         trt_typs <- data.frame("node" = character(), "node_group" = character())
         for (t in counter_trait_types$types) {
           if (!shiny::isTruthy(input[[t]])) {
-            vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
+            if (isTRUE(input$gxe_mode)) {
+              vect_err <- append(vect_err, paste0("For trait type ", t, ", no nodes were selected"))
+            } else {
+              vect_err <- append(vect_err, paste0("For group ", t, ", no nodes were selected"))
+            }
+
           }
           tlist[[t]] <- input[[t]]
         }
         trt_typs <- data.frame("node_group" = rep(names(tlist), lengths(tlist)), "node" = unlist(tlist))
       }
       #If a trait grouping is passed and mode is gxe, check if trait grouping is passed correctly
-      if(isTRUE(input$gxe_mode) && !shiny::isTruthy(input$trait_types)){
-        vect_err <- append(vect_err, "No traits given")
+      # if(isTRUE(input$gxe_mode) && !shiny::isTruthy(input$trait_types)){
+      #   print("hererere")
+      #   vect_err <- append(vect_err, "No traits given")
         #Check if we have any error and show a notification about the error(s)
         # vect_err <- vector("character")
         # if(!shiny::isTruthy(input$trait_types)){
@@ -1559,7 +1565,7 @@ netShiny <- function(Net.obj = NULL,
         #     vect_err <- append(vect_err, "Sum of number of trait groups given cannot be less than number of traits")
         #   }
         # }
-      }
+      #}
       #Check if we have any error and show a notification about the error(s)
       if(length(vect_err) != 0){
         shiny::showNotification(paste(vect_err, collapse = "\n"), type = "error")
@@ -1630,6 +1636,7 @@ netShiny <- function(Net.obj = NULL,
           names(vals$networks) <- sprintf("Network %s", 1:length(vals$networks))
           vals$sett_names <- sprintf("Network %s", 1:length(vals$networks))
           shiny::isolate(shiny::updateTextInput(inputId = "net_names", label = "Network Names", value = paste(vals$sett_names, collapse = ", ")))
+          shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
         }
         shiny::isolate(shinyjs::hide("cor_m"))
         nets <- lapply(vals$networks, function(x){diag(x) <- 0; x})
@@ -1646,6 +1653,7 @@ netShiny <- function(Net.obj = NULL,
           names(vals$networks) <- sprintf("Environment %s", 1:length(vals$networks))
           vals$sett_names <- sprintf("Environment %s", 1:length(vals$networks))
           shiny::isolate(shiny::updateTextInput(inputId = "net_names", label = "Environment Names", value = paste(vals$sett_names, collapse = ", ")))
+          shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
         }
         shiny::isolate(shinyjs::show("cor_m"))
         shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = 0, max = 1, label = "Partial Correlations Traits"))
