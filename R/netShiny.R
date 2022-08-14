@@ -1441,6 +1441,7 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateTextInput(inputId = "net_names", value = paste(vals$sett_names, collapse = ",")))
         shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names))
         shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
+        shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names))
         shiny::isolate(shiny::updateTextInput(inputId = "net_names", value = paste(vals$sett_names, collapse = ",")))
         shinyBS::toggleModal(session = session, modalId = "modalStartup_reconstruction", toggle = "close")
         shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "open")
@@ -1551,6 +1552,7 @@ netShiny <- function(Net.obj = NULL,
           vals$sett_names <- sprintf("Network %s", 1:length(vals$networks))
           shiny::isolate(shiny::updateTextInput(inputId = "net_names", label = "Network Names", value = paste(vals$sett_names, collapse = ", ")))
           shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
+          shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names))
         }
         shiny::isolate(shinyjs::hide("cor_m"))
         nets <- lapply(vals$networks, function(x){diag(x) <- 0; x})
@@ -1568,6 +1570,7 @@ netShiny <- function(Net.obj = NULL,
           vals$sett_names <- sprintf("Environment %s", 1:length(vals$networks))
           shiny::isolate(shiny::updateTextInput(inputId = "net_names", label = "Environment Names", value = paste(vals$sett_names, collapse = ", ")))
           shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
+          shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names))
         }
         shiny::isolate(shinyjs::show("cor_m"))
         shiny::isolate(shiny::updateSliderInput(session = session, inputId = "cor_t", min = 0, max = 1, label = "Partial Correlations Traits"))
