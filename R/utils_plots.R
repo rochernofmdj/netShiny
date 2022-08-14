@@ -153,11 +153,11 @@ get_vis_net <- function(vals, input, mat, g, lay){
 ##########################################################
 
 # Function to create interactive matrices plot
-get_mat_plots <- function(vals) {
+get_mat_plots <- function(vals, input) {
   mat_plots <- list()
-  for (i in 1:length(vals$networks)) {
+  for (i in 1:length(input$mat_sel)) {
     show_scale <- ifelse(i == 1, TRUE, FALSE)
-    curr_env <- vals$networks[[i]]
+    curr_env <- vals$networks[[input$mat_sel[[i]]]]
     nms <- dimnames(curr_env)[[1]]
     diag(curr_env) <- 0
     fig <-
@@ -180,7 +180,15 @@ get_mat_plots <- function(vals) {
     mat_plots[[i]] <- fig
   }
 
-  plt <- plotly::subplot(mat_plots, nrows = 2, shareY = TRUE, shareX = TRUE)
+  shiny::validate(shiny::need(length(mat_plots) > 0, 'No Networks Chosen'))
+
+  if (length(input$mat_sel) > 1) {
+    plt <- plotly::subplot(mat_plots, nrows = 2, shareY = TRUE, shareX = TRUE)
+  }
+  else {
+    plt <- mat_plots[[1]]
+  }
+
   return(plt)
 
 }

@@ -328,14 +328,20 @@ netShiny <- function(Net.obj = NULL,
                               #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
                               #                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px"))),
 
-                              shiny::tabsetPanel(id = "tabs_comm_detect",
+                              shiny::tabsetPanel(id = "tabs_net_mat",
                                                  shiny::tabPanel("Networks", shiny::splitLayout(cellWidths = c("50%", "50%"),
                                                                                                    style = "padding: 0px",
                                                                                                    cellArgs = list(style = "border-right: 1px solid silver"),
                                                                                                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes", height = "1000px")),
                                                                                                    shinycssloaders::withSpinner(visNetwork::visNetworkOutput("network_proxy_nodes_2", height = "1000px")))
                                                  ),
-                                                 shiny::tabPanel("Matrices",  fillPage(
+                                                 shiny::tabPanel("Matrices",
+                                                                 shinyWidgets::dropMenu(
+                                                                   shinyWidgets::actionBttn(inputId = "mat_action", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
+                                                                   shiny::tags$h3("Choose Networks"),
+                                                                   shinyWidgets::pickerInput(inputId = "mat_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
+                                                                   hideOnClick = TRUE),
+                                                                 shiny::fillPage(
                                                    tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 100px) !important;}"),
                                                    shinycssloaders::withSpinner(plotly::plotlyOutput("mat_plots", width = "100%", height = "100%"))
                                                  ))
@@ -691,19 +697,24 @@ netShiny <- function(Net.obj = NULL,
 
     #This hides the controls for when the tab is not the netoworks tab
     #And shows them when we switch back to the networks tab
-    shiny::observeEvent(c(input$tabs, input$tabs_summ_stats, input$tab_differences, input$tabs_comm_detect), {
+    shiny::observeEvent(c(input$tabs, input$tabs_summ_stats, input$tabs_net_mat, input$tab_differences, input$tabs_comm_detect), {
       controls <- c("cor_t", "cor_m", "net1", "net2", "layout", "roundness", "refresh", "print_network", "subgraph",
                     "sets_selin", "marker", "meas_butt", "cluster_algs", "customize")
 
       if(input$tabs == "networks"){
         shiny::updateSelectInput(session, "net1", label = "Left Panel")
         shiny::updateSelectInput(session, "net2", label = "Right Panel")
-
-        sapply(controls, shinyjs::show)
-        sapply(c("sets_selin", "marker", "meas_butt", "cluster_algs"), shinyjs::hide)
-        if(vals$mode != "gxe"){
-          shinyjs::hide("cor_m")
+        if(input$tabs_net_mat == "Networks"){
+          sapply(controls, shinyjs::show)
+          sapply(c("sets_selin", "marker", "meas_butt", "cluster_algs"), shinyjs::hide)
+          if(vals$mode != "gxe"){
+            shinyjs::hide("cor_m")
+          }
         }
+        else {
+          sapply(controls, shinyjs::hide)
+        }
+
       }
 
       else if(input$tabs == "summ_stats"){
@@ -1002,7 +1013,7 @@ netShiny <- function(Net.obj = NULL,
     output$mat_plots <- plotly::renderPlotly({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- get_mat_plots(vals = vals)
+      p <- get_mat_plots(vals = vals, input = input)
 
       plotly::layout(p, paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
     })
@@ -1450,6 +1461,9 @@ netShiny <- function(Net.obj = NULL,
 
       if(length(vals$networks) > 0){
         vals$sett_names <- names(vals$networks)
+        shiny::isolate(shiny::updateTextInput(inputId = "net_names", value = paste(vals$sett_names, collapse = ",")))
+        shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names))
+        shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names))
         shiny::isolate(shiny::updateTextInput(inputId = "net_names", value = paste(vals$sett_names, collapse = ",")))
         shinyBS::toggleModal(session = session, modalId = "modalStartup_reconstruction", toggle = "close")
         shinyBS::toggleModal(session = session, modalId = "startup_mapping", toggle = "open")
