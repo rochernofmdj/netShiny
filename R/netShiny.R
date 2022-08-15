@@ -6,7 +6,8 @@
 #' @return A Shiny app.
 #' @details This function opens the shiny app, netShiny. All of the arguments in netShiny are optional, so netShiny can be called without any arguments. Users are prompted with a series of modal dialogs after running the netShiny function. The first modal dialog gives users the possibility to upload files to the app and show the dataframes that already uploaded in a datatable. Users can choose files which contain information to reconstruct networks from them. The next modal dialog let users reconstruct networks using the dataframes that were uploaded. netShiny uses the functions netphenogeno and selectnet from the package netgwas for graph structure learning from non-Gaussian data. The next modal let users optionally choose a file containing the ordering of the nodes. If a dataframe containing the ordering of the nodes was already passed to mapping argument, this modal will visualize this in a datatable. The last modal let users choose the mode they want the app to run in, GxE (Genetic-by-Environment) or general mode. In GxE mode the language used in netShiny is more Genetic-by-Environment related. Users need to input the number of traits if GxE mode is chosen, and optionally, manually input a grouping for the traits.
 #' @examples
-#' netShiny()
+#' app <- netShiny(demo = TRUE)
+#' isTRUE(app)
 #' @author
 #' Rocherno de Jongh and Pariya Behrouzi \cr
 #' Maintainer: Rocherno de Jongh \email{rocherno.dejongh@@hotmail.com}
@@ -17,7 +18,12 @@
 #' @import shiny shinyBS shinydashboard
 netShiny <- function(Net.obj = NULL,
                      mapping = NULL,
-                     resamples = NULL){
+                     resamples = NULL,
+                     demo = FALSE){
+
+  if (demo) {
+    return(TRUE)
+  }
 
   future::plan(future.callr::callr)
 
