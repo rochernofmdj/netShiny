@@ -325,7 +325,6 @@ netShiny <- function(Net.obj = NULL,
                                                  shiny::tabPanel("Matrices",
                                                                  shinyWidgets::dropMenu(
                                                                    shinyWidgets::actionBttn(inputId = "mat_action", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
-                                                                   shiny::tags$h3("Choose Networks"),
                                                                    shinyWidgets::pickerInput(inputId = "mat_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE),
                                                                  shiny::fillPage(
