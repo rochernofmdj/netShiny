@@ -1,7 +1,7 @@
 # Arguments of netphenogeno and selectnet
-args_netphenogeno <- methods::formalArgs(netgwas::netphenogeno)[-1]
+args_netphenogeno <- names(formals(netgwas::netphenogeno))[-1]
 args_netphenogeno <- args_netphenogeno[-length(args_netphenogeno)]
-args_selectnet <- methods::formalArgs(netgwas::selectnet)[-1]
+args_selectnet <- names(formals(netgwas::selectnet))[-1]
 args_selectnet <- args_selectnet[-length(args_selectnet)]
 
 # Columns that takes in the users inputted data (character vector) for columns to exclude and returns
@@ -63,7 +63,8 @@ perform_startup_recon <- function(val_nets, files, l_args) {
   }
   shiny::withProgress(message = "Reconstructing Networks", value = 0, {
     for (i in 1:len_files) {
-      curr_name <- paste0(tools::file_path_sans_ext(nms[i]), "_", l_args[["net_method_start"]])
+      file_name <- sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(nms[i]))
+      curr_name <- paste0(file_name, "_", l_args[["net_method_start"]])
       shiny::incProgress(1/len_files, detail = paste("Reconstructing Network", curr_name))
       if(curr_name %in% names(val_nets)){
         shiny::showNotification(paste("File with name ", curr_name, "has already been reconstructed. \n", "Skipping."), type = "warning")
@@ -260,7 +261,9 @@ get_trait_groups <- function(trait_types){
   }
 }
 
-# utils::globalVariables(c("net2", "value", "Distance Measure", "node", "freq", "node_group", "%>%",
-#                          "V", "Name", "Value", "Setting", "from", "to", "degree", "weights", "type", "stat",
-#                          "width", "density", "sett", "val", "cons", "isTruthy", "HTML", "textOutput",
-#                          "myFuture", '<<-', "head", "as_data_frame"))
+get_ext <- function(file_name) {
+  ext <- strsplit(basename(file_name), split="\\.")[[1]]
+  return(ext[-1])
+}
+
+utils::globalVariables(c("node", "freq", "degree", "width", "density", "cons", "node_group", "value"))

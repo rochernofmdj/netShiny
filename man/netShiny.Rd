@@ -23,7 +23,9 @@ This function launches the netShiny Shiny app.
 This function opens the shiny app, netShiny. All of the arguments in netShiny are optional, so netShiny can be called without any arguments. Users are prompted with a series of modal dialogs after running the netShiny function. The first modal dialog gives users the possibility to upload files to the app and show the dataframes that already uploaded in a datatable. Users can choose files which contain information to reconstruct networks from them. The next modal dialog let users reconstruct networks using the dataframes that were uploaded. netShiny uses the functions netphenogeno and selectnet from the package netgwas for graph structure learning from non-Gaussian data. The next modal let users optionally choose a file containing the ordering of the nodes. If a dataframe containing the ordering of the nodes was already passed to mapping argument, this modal will visualize this in a datatable. The last modal let users choose the mode they want the app to run in, GxE (Genetic-by-Environment) or general mode. In GxE mode the language used in netShiny is more Genetic-by-Environment related. Users need to input the number of traits if GxE mode is chosen, and optionally, manually input a grouping for the traits.
 }
 \examples{
-sum(2, 2)
+if (interactive()) {
+    netShiny()
+}
 }
 \references{
 Behrouzi, P., and Wit, E. C. (2017c). netgwas: An R Package for Network-Based Genome-Wide Association Studies. arXiv preprint, arXiv:1710.01236.

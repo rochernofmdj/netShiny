@@ -1,36 +1,3 @@
-#Function that gives you the ability to manipulate the width and color of
-#the edges in an igraph network
-#Credit: Gábor Csárdi
-#https://lists.gnu.org/archive/html/igraph-help/2013-03/msg00030.html
-mycircle <- function(coords, v = NULL, params) {
-  vertex.color <- params("vertex", "color")
-  if (length(vertex.color) != 1 && !is.null(v)) {
-    vertex.color <- vertex.color[v]
-  }
-  vertex.size  <- 1/200 * params("vertex", "size")
-  if (length(vertex.size) != 1 && !is.null(v)) {
-    vertex.size <- vertex.size[v]
-  }
-  vertex.frame.color <- params("vertex", "frame.color")
-  if (length(vertex.frame.color) != 1 && !is.null(v)) {
-    vertex.frame.color <- vertex.frame.color[v]
-  }
-  vertex.frame.width <- params("vertex", "frame.width")
-  if (length(vertex.frame.width) != 1 && !is.null(v)) {
-    vertex.frame.width <- vertex.frame.width[v]
-  }
-
-  mapply(coords[,1], coords[,2], vertex.color, vertex.frame.color,
-         vertex.size, vertex.frame.width,
-         FUN=function(x, y, bg, fg, size, lwd) {
-           graphics::symbols(x = x, y = y, bg = bg, fg = fg, lwd = lwd,
-                             circles = size, add = TRUE, inches = FALSE)
-         })
-}
-
-igraph::add.vertex.shape("fcircle", clip = igraph::igraph.shape.noclip,
-                         plot = mycircle, parameters = list(vertex.frame.color = 1, vertex.frame.width = 1))
-
 ##########################################################
 #####################NETWORKS SUBTAB######################
 ##########################################################
@@ -170,7 +137,7 @@ get_mat_plots <- function(vals, input) {
         zmax = 1,
         type = "heatmap",
         showscale = show_scale,
-        colors = colorRamp(c("blue", "#F5F2F2", "red")),
+        colors = grDevices::colorRamp(c("blue", "#F5F2F2", "red2")),
         hovertemplate = paste(' x: %{x} <br>',
                               'y: %{y} <br>',
                               'value: %{z}',
@@ -243,9 +210,9 @@ get_weights_analysis_plot <- function(vals, input){
   p <- ggplot2::ggplot(data = df_conns, ggplot2::aes(x = cons, text = paste0(node_text, cons, "\n",
                                                                              con_text, round(value, 3), "\n",
                                                                              group_text, node_group))) +
-    ggplot2::geom_point(ggplot2::aes(y = value), color = "red") +
+    ggplot2::geom_point(ggplot2::aes_(y = ~value), color = "red") +
     #geom_line(aes(y = values, group = 1)) +
-    ggplot2::geom_bar(ggplot2::aes(weight = value, fill = node_group), show.legend = FALSE) +
+    ggplot2::geom_bar(ggplot2::aes_(weight = ~value, fill = ~node_group), show.legend = FALSE) +
     ggplot2::xlab(NULL) +
     ggplot2::ylab(NULL) +
     ggplot2::facet_wrap(~setting, nrow = length(vals$networks)) +
@@ -292,13 +259,13 @@ get_par_cor_plot <- function(vals, input){
     dat <- rbind(dat, data.frame(type = rep(vals$sett_names[i], length(lst)), weights = lst))
   }
 
-  p <- ggplot2::ggplot(data = dat, ggplot2::aes(x = weights, fill = type)) +
-    ggplot2::geom_histogram(colour = "black", fill = "#007c00", bins = input$par_cor_bins, ggplot2::aes(y = stat(width*density))) +
+  p <- ggplot2::ggplot(data = dat, ggplot2::aes_(x = ~weights, fill = ~type)) +
+    ggplot2::geom_histogram(colour = "black", fill = "#007c00", bins = input$par_cor_bins, ggplot2::aes(y = ggplot2::after_stat(width * density))) +
     ggplot2::xlab(x_lab) +
     ggplot2::ylab("Proportion") +
     ggplot2::facet_wrap(~type) +
-    ggplot2::scale_x_continuous(breaks = scales::pretty_breaks(n = input$par_cor_breaks), expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(labels = scales::percent_format()) +
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +
     ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                    axis.title.y = ggplot2::element_text(size = 16, face = "bold"),
                    axis.title.x = ggplot2::element_text(size = 16, face = "bold"),
@@ -311,6 +278,8 @@ get_par_cor_plot <- function(vals, input){
 ##########################################################
 ##############DIFFERENCE NETWORKS SUBTAB##################
 ##########################################################
+
+
 
 # Function to get difference between to matrices
 # 3 = gained connection from mat1 -> mat2, 2 = lost connection from mat1 -> mat2, 1 = sign change from mat1 -> mat2
@@ -343,6 +312,64 @@ get_diff_mat <- function(mat1, mat2){
   return(diff)
 }
 
+get_dif_net_compl <- function(vals, input){
+  mat1 <- vals$networks[[input$net1]]
+  mat2 <- vals$networks[[input$net2]]
+
+  diff <- get_diff_mat(mat1, mat2)
+  diff <- getNZ(vals = vals, input = input, mat = diff, diff = TRUE)
+
+  diff_compl <- mat1 - mat2
+  diff_compl <- getNZ(vals = vals, input = input, mat = diff_compl, diff = TRUE)
+
+  shiny::validate(
+    shiny::need(dim(diff_compl)[[1]] != 0, "No Difference Between Networks")
+  )
+
+  g1 <- igraph::graph_from_adjacency_matrix(diff, mode = "undirected", weighted = TRUE)
+  g2 <- igraph::graph_from_adjacency_matrix(diff_compl, mode = "undirected", weighted = TRUE)
+
+  df_g2 <- data.frame(igraph::get.edgelist(g2))
+  colnames(df_g2) <- c("a", "b")
+
+  df_g1 <- data.frame(igraph::get.edgelist(g1))
+  colnames(df_g1) <- c("a", "b")
+  clrs <- c("blue", "red", "green")
+  df_g1$color <- clrs[igraph::E(g1)$weight]
+
+  merge_df <- merge(df_g2, df_g1, all = TRUE)
+  merge_df$color[is.na(merge_df$color)] <- "black"
+  igraph::E(g2)$color <- merge_df$color
+  test.visn <- visNetwork::toVisNetworkData(g2)
+  test.visn$edges$value <- abs(igraph::E(g2)$weight)
+
+  sel_nodes <- dimnames(diff_compl)[[1]]
+  sel_by <- NULL
+  if(!is.null(vals$map_nodes)){
+    if(vals$mode == "gxe"){
+      sel_by <- "Chromosome"
+      test.visn$nodes$Chromosome <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
+    }
+    else{
+      sel_by <- "Group"
+      test.visn$nodes$Group <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
+    }
+    test.visn$nodes$color.background <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
+    igraph::V(g2)$color <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
+  }
+
+  test.visn$nodes$font.size <- 20
+
+  ledges <- data.frame(color = c("blue", "green", "red", "black"),
+                       label = c("Sign Change", "Gained", "Lost", "No Change"), arrows = c("unidrected", "undirected", "undirected", "undirected"))
+
+  visNetwork::visNetwork(test.visn$nodes, test.visn$edges, height = '1000px', width = '1000px') %>%
+    visNetwork::visIgraphLayout()  %>%
+    visNetwork::visOptions(highlightNearest = list(enabled = T, hover = T), selectedBy = sel_by) %>%
+    visNetwork::visLegend(addEdges = ledges, position = "right") %>%
+    return()
+}
+
 get_dif_net <- function(vals, input){
   mat1 <- vals$networks[[input$net1]]
   mat2 <- vals$networks[[input$net2]]
@@ -360,12 +387,6 @@ get_dif_net <- function(vals, input){
   igraph::E(g)$color <- edge_cols
   igraph::E(g)$weight[igraph::E(g)$weight != 0] <- 1
 
-  # wdiff <- Matrix::drop0((mat1 - mat2))
-  # wdiff <- getNZ(vals = vals, input = input, mat = wdiff, diff = TRUE)
-  # wg <- igraph::graph_from_adjacency_matrix(wdiff, mode = "undirected", weighted = TRUE)
-  #
-  # igraph::E(g)$weight <- abs(igraph::E(wg)$weight)
-  # igraph::E(g)$value <- abs(igraph::E(wg)$weight)
   test.visn <- visNetwork::toVisNetworkData(g)
 
   sel_nodes <- dimnames(diff)[[1]]
@@ -373,14 +394,18 @@ get_dif_net <- function(vals, input){
   if(!is.null(vals$map_nodes)){
     if(vals$mode == "gxe"){
       sel_by <- "Chromosome"
-      test.visn$nodes$Chromosome <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      #test.visn$nodes$Chromosome <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      test.visn$nodes$Chromosome <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
     }
     else{
       sel_by <- "Group"
-      test.visn$nodes$Group <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      #test.visn$nodes$Group <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_group
+      test.visn$nodes$Group <- vals$map_nodes$node_group[match(sel_nodes, vals$map_nodes$node)]
     }
-    test.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
-    igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    #test.visn$nodes$color.background <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    test.visn$nodes$color.background <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
+    #igraph::V(g)$color <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
+    igraph::V(g)$color <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
   }
 
   test.visn$nodes$font.size <- 20
@@ -448,7 +473,8 @@ get_diff_sets <- function(vals, input){
   )
 
   if(shiny::isTruthy(vals$map_nodes)){
-    mats_nms_grps <- vals$map_nodes[vals$map_nodes$node %in% mats_nms, ]$node_group
+    #mats_nms_grps <- vals$map_nodes[vals$map_nodes$node %in% mats_nms, ]$node_group
+    mats_nms_grps <- vals$map_nodes$node_group[match(mats_nms, vals$map_nodes$node)]
     df_tab <- data.frame(mats_nms, mats_nms_grps)
     if(vals$mode == "gxe"){
       colnames(df_tab) <- c("Markers", "Chromosome")
@@ -587,7 +613,7 @@ create_central_meas <- function(vals, input){
   }
 
   p <-  ggplot2::ggplot() +
-    ggplot2::geom_jitter(data = df_graphs_reshaped, ggplot2::aes(x = Name, y = Value, color = Setting), size = 3) +
+    ggplot2::geom_jitter(data = df_graphs_reshaped, ggplot2::aes_(x = ~Name, y = ~Value, color = ~Setting), size = 3) +
     ggplot2::facet_grid(Centrality ~ ., scales = "free_y") +
     ggplot2::xlab("") +
     ggplot2::ylab("") +
@@ -609,7 +635,7 @@ create_central_meas <- function(vals, input){
 
   if(input$cen_meas_col_switch && shiny::isTruthy(vals$map_nodes)){
     p <- p +
-      ggplot2::geom_rect(data = rects_com, ggplot2::aes(xmin = from, xmax = to, ymin = -Inf, ymax = Inf, fill = node_group), alpha = 0.2) +
+      ggplot2::geom_rect(data = rects_com, ggplot2::aes_(xmin = ~from, xmax = ~to, ymin = -Inf, ymax = Inf, fill = ~node_group), alpha = 0.2) +
       ggplot2::guides(fill = ggplot2::guide_legend(ncol = ceiling(length(rects_com$node_group)/div))) +
       ggplot2::scale_fill_manual(values = rects_com$node_color)
 
@@ -680,7 +706,7 @@ get_summ_stats_plot <- function(vals, input){
     }
   }
 
-  p <- ggplot2::ggplot(dat, ggplot2::aes(x = sett, y = val, fill = sett)) +
+  p <- ggplot2::ggplot(dat, ggplot2::aes_(x = ~sett, y = ~val, fill = ~sett)) +
     ggplot2::geom_bar(stat = 'identity', width = 0.95) +
     ggplot2::facet_wrap(~meas, ncol = 3, scale = "free_y") +
     ggplot2::labs(fill = NULL) +
@@ -761,14 +787,14 @@ bootstrap_func <- function(vals, mkr, new_res){
   }
   p <- suppressWarnings(
     ggplot2::ggplot() +
-      ggplot2::geom_bar(data = tab, ggplot2::aes(x = node,
-                                                 y = freq,
-                                                 fill = node_group,
-                                                 text = paste0("Name: ",  node, "\n", text_tooltip, node_group),
-                                                 text2 = paste0("Percentage", freq * 100)),
+      ggplot2::geom_bar(data = tab, ggplot2::aes_(x = ~node,
+                                                 y = ~freq,
+                                                 fill = ~node_group,
+                                                 text = paste0("Name: ",  ~node, "\n", text_tooltip, ~node_group),
+                                                 text2 = paste0("Percentage", ~freq * 100)),
                         stat = 'identity') +
-      ggplot2::geom_point(data = df_conn, ggplot2::aes(x = node, y = freq), shape = 23, fill = "red", color = "black", color = "red", size = 2) +
-      ggplot2::scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      ggplot2::geom_point(data = df_conn, ggplot2::aes_(x = ~node, y = ~freq), shape = 23, fill = "red", color = "black", color = "red", size = 2) +
+      ggplot2::scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +
       ggplot2::facet_wrap(~environment, nrow = length(vals$networks)) +
       ggplot2::theme_minimal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = .5, hjust = 1, size = 10),
@@ -887,7 +913,9 @@ apply_mat_dist_list <- function(vals, input, for_plot = FALSE){
       combis_df$value <- log(combis_df$value)
     }
 
-    p <- ggplot2::ggplot(combis_df, ggplot2::aes(x = factor(net2), y = value, fill = `Distance Measure`)) +
+    combis_df$net2 <- factor(combis_df$net2)
+
+    p <- ggplot2::ggplot(combis_df, ggplot2::aes_(x = ~net2, y = ~value, fill =  ~`Distance Measure`)) +
       ggplot2::geom_bar(stat = "identity", width = 0.5, position = "dodge") +
       ggplot2::facet_wrap(~net1, scales = "free_x") +
       ggplot2::xlab(NULL) +
@@ -895,7 +923,8 @@ apply_mat_dist_list <- function(vals, input, for_plot = FALSE){
       ggplot2::theme(axis.text.x = ggplot2::element_text(size = 10),
                      axis.title.y = ggplot2::element_text(size = 16, face = "bold"),
                      axis.title.x = ggplot2::element_text(size = 16, face = "bold"),
-                     strip.text = ggplot2::element_text(size = 14, face = "bold"))
+                     strip.text = ggplot2::element_text(size = 14, face = "bold")) +
+      ggplot2::labs(fill = "Distance Measures")
 
 
     return(p)
@@ -925,42 +954,40 @@ comm_detection_plot <- function(vals, input, setting){
   dat <- data.frame(sett = factor(),
                     meas = factor(),
                     val = numeric())
-  withr::with_seed(vals$rseed,{
-    mat <- getNZ(vals = vals, input = input, mat = vals$networks[[setting]])
-    mat <- get_subnet(vals = vals, mat = mat)
 
-    shiny::validate(shiny::need(length(mat@x) > 0, "No Connections"))
+  mat <- getNZ(vals = vals, input = input, mat = vals$networks[[setting]])
+  mat <- get_subnet(vals = vals, mat = mat)
 
-    mat@x[abs(mat@x) > 0] <- 1
-    g <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = NULL)
-    g <- del_iso_nodes(g)
+  shiny::validate(shiny::need(length(mat@x) > 0, "No Connections"))
 
-    lay <- igraph::layout_with_fr(g)
-    row.names(lay) <- names(igraph::V(g))
+  mat@x[abs(mat@x) > 0] <- 1
+  g <- igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = NULL)
+  g <- del_iso_nodes(g)
 
-    if(vals$cluster_algs == "Fast Greedy"){
-      try(c1 <- igraph::cluster_fast_greedy(g))
+  lay <- igraph::layout_with_fr(g)
+  row.names(lay) <- names(igraph::V(g))
+
+  if(vals$cluster_algs == "Fast Greedy"){
+    try(c1 <- igraph::cluster_fast_greedy(g))
+  }
+  else if(vals$cluster_algs == "Edge Betweenness"){
+    try(c1 <- igraph::cluster_edge_betweenness(g))
+  }
+
+  row_lay <- rownames(lay)
+  row_coords <- rownames(vals$coords)
+  for (i in 1:nrow(lay)){
+    if(is.element(row_lay[i], row_coords)){
+      lay[row_lay[i], ] <- vals$coords[row_lay[i], ]
     }
-    else if(vals$cluster_algs == "Edge Betweenness"){
-      try(c1 <- igraph::cluster_edge_betweenness(g))
-    }
+  }
 
-    row_lay <- rownames(lay)
-    row_coords <- rownames(vals$coords)
-    for (i in 1:nrow(lay)){
-      if(is.element(row_lay[i], row_coords)){
-        lay[row_lay[i], ] <- vals$coords[row_lay[i], ]
-      }
-    }
+  sel_nodes <- dimnames(mat)[[1]]
+  if(!is.null(vals$map_nodes)){
+    frame_colors <- vals$map_nodes$node_color[match(sel_nodes, vals$map_nodes$node)]
+  }
 
-    sel_nodes <- dimnames(mat)[[1]]
-    if(!is.null(vals$map_nodes)){
-      frame_colors <- vals$map_nodes[vals$map_nodes$node %in% sel_nodes, ]$node_color
-    }
-
-    p <- plot(c1, g, layout = cbind(lay[, 1], -1 * lay[, 2]), vertex.shape = "fcircle",
-              edge.curved = vals$roundness)
-  })
+  p <- plot(c1, g, layout = cbind(lay[, 1], -1 * lay[, 2]), edge.curved = vals$roundness)
   return(p)
 }
 
@@ -1008,7 +1035,7 @@ modularity_plot <- function(vals, input){
     }
   }
 
-  p <- ggplot2::ggplot(dat, ggplot2::aes(x = sett, y = val, fill = sett)) +
+  p <- ggplot2::ggplot(dat, ggplot2::aes_(x = ~sett, y = ~val, fill = ~sett)) +
     ggplot2::geom_bar(stat = 'identity', width = 0.95) +
     ggplot2::facet_wrap(~meas, ncol = 3, scale = "free_y") +
     ggplot2::ylab("Value") +

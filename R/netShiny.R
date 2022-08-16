@@ -6,8 +6,10 @@
 #' @return A Shiny app.
 #' @details This function opens the shiny app, netShiny. All of the arguments in netShiny are optional, so netShiny can be called without any arguments. Users are prompted with a series of modal dialogs after running the netShiny function. The first modal dialog gives users the possibility to upload files to the app and show the dataframes that already uploaded in a datatable. Users can choose files which contain information to reconstruct networks from them. The next modal dialog let users reconstruct networks using the dataframes that were uploaded. netShiny uses the functions netphenogeno and selectnet from the package netgwas for graph structure learning from non-Gaussian data. The next modal let users optionally choose a file containing the ordering of the nodes. If a dataframe containing the ordering of the nodes was already passed to mapping argument, this modal will visualize this in a datatable. The last modal let users choose the mode they want the app to run in, GxE (Genetic-by-Environment) or general mode. In GxE mode the language used in netShiny is more Genetic-by-Environment related. Users need to input the number of traits if GxE mode is chosen, and optionally, manually input a grouping for the traits.
 #' @examples
-#' app <- netShiny(demo = TRUE)
-#' isTRUE(app)
+#' if (interactive()) {
+#'     netShiny()
+#' }
+
 #' @author
 #' Rocherno de Jongh and Pariya Behrouzi \cr
 #' Maintainer: Rocherno de Jongh \email{rocherno.dejongh@@hotmail.com}
@@ -16,14 +18,10 @@
 #' @seealso \code{\link[netgwas]{netphenogeno}}, \code{\link[netgwas]{selectnet}}
 #' @export
 #' @import shiny shinyBS shinydashboard
+#' @importFrom magrittr %>%
 netShiny <- function(Net.obj = NULL,
                      mapping = NULL,
-                     resamples = NULL,
-                     demo = FALSE){
-
-  if (demo) {
-    return(TRUE)
-  }
+                     resamples = NULL){
 
   future::plan(future.callr::callr)
 
@@ -253,7 +251,7 @@ netShiny <- function(Net.obj = NULL,
                   ),
                   shiny::tags$head(shiny::tags$style("#data_settings .modal-footer{ display:none}"))
     ),
-    shiny::tags$head(shiny::tags$style(HTML('
+    shiny::tags$head(shiny::tags$style(shiny::HTML('
               /* logo */
         .skin-blue .main-header .logo {
           background-color: #306ea1;
@@ -342,16 +340,15 @@ netShiny <- function(Net.obj = NULL,
       #Summary Statistics tab
       shinydashboard::tabItem(tabName = "summ_stats",
                               shiny::tabsetPanel(id = "tabs_summ_stats",
-                                                 shiny::tabPanel("Metrics", shinycssloaders::withSpinner(shiny::plotOutput("summary_statistics", height = "750px")), color = "#007c00", size = 2),
+                                                 shiny::tabPanel("Metrics", shinycssloaders::withSpinner(shiny::plotOutput("summary_statistics", height = "750px"), color = "#007c00", size = 2)),
                                                  shiny::tabPanel(title = shiny::textOutput("title_par_cors"),
                                                                  shinyWidgets::dropdownButton(
                                                                    shiny::tags$h3("Plot Settings"),
-                                                                   shiny::numericInput(inputId = "par_cor_bins", label = "Bins", min = 0, value = 15),
-                                                                   shiny::numericInput(inputId = "par_cor_breaks", label = "X-axis Breaks", min = 0, value = 20),
+                                                                   shiny::numericInput(inputId = "par_cor_bins", label = "# of Bins", min = 0, value = 15),
                                                                    circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to change plot's settings")
                                                                  ),
-                                                                 shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px")), color = "#007c00", size = 2)
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("par_cors", height = "750px"), color = "#007c00", size = 2))
                               )
 
       ),
@@ -363,9 +360,9 @@ netShiny <- function(Net.obj = NULL,
                                                                                                    style = "padding: 0px",
                                                                                                    cellArgs = list(style = "border-right: 1px solid silver"),
                                                                                                    shinycssloaders::withSpinner(shiny::plotOutput("comms_plot", height = "1000px"), color = "#007c00", size = 2),
-                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot2", height = "1000px")), color = "#007c00", size = 2)
+                                                                                                   shinycssloaders::withSpinner(shiny::plotOutput("comms_plot2", height = "1000px"), color = "#007c00", size = 2))
                                                  ),
-                                                 shiny::tabPanel("Modularity",  shinycssloaders::withSpinner(shiny::plotOutput("mods")), color = "#007c00", size = 2)
+                                                 shiny::tabPanel("Modularity",  shinycssloaders::withSpinner(shiny::plotOutput("mods"), color = "#007c00", size = 2))
 
                               )
       ),
@@ -433,9 +430,9 @@ netShiny <- function(Net.obj = NULL,
       shinydashboard::tabItem(tabName = "differences",
                               shiny::tabsetPanel(id = "tab_differences",
                                                  shiny::tabPanel("Difference Networks",
-                                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("diff_nets", height = "750px")), color = "#007c00", size = 2),
+                                                                 shinycssloaders::withSpinner(visNetwork::visNetworkOutput("diff_nets", height = "750px"), color = "#007c00", size = 2)),
                                                  shiny::tabPanel("Difference Table",
-                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_table")), color = "#007c00", size = 2),
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_table"), color = "#007c00", size = 2)),
                                                  shiny::tabPanel("Network Distances",
                                                                  shiny::fluidRow(
                                                                    shinydashboard::box(title = shiny::textOutput("title_dist_table"), width = 12, solidHeader = TRUE, status = "primary",
@@ -450,7 +447,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    )
                                                                  ),
                                                                  shiny::fluidRow(
-                                                                   shinydashboard::box(title = textOutput("title_dist_plot"), width = 12, solidHeader = TRUE, status = "primary",
+                                                                   shinydashboard::box(title = shiny::textOutput("title_dist_plot"), width = 12, solidHeader = TRUE, status = "primary",
                                                                                        shinyWidgets::dropdownButton(
                                                                                          shiny::tags$h3("Plot Settings"),
                                                                                          shinyWidgets::radioGroupButtons(inputId = "mat_type_plot", label = "", choices = c("Adjacency", "Weighted"), selected = "Adjacency", justified = TRUE),
@@ -471,9 +468,9 @@ netShiny <- function(Net.obj = NULL,
                                                                    shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE
                                                                  ),
-                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px")), color = "#007c00", size = 2),
+                                                                 shinycssloaders::withSpinner(shiny::plotOutput("venn_diag", height = "750px"), color = "#007c00", size = 2)),
                                                  shiny::tabPanel("Nodes Sets",
-                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets")), color = "#007c00", size = 2)
+                                                                 shinycssloaders::withSpinner(DT::dataTableOutput("diff_sets"), color = "#007c00", size = 2))
                               )
       )
     )
@@ -492,7 +489,7 @@ netShiny <- function(Net.obj = NULL,
     shinyjs::useShinyjs()
 
     if(is.null(resamples)){
-      shinyjs::hide(selector = "a[data-value='bootstraps']")
+      shinyjs::hide(selector = "a[data-value='unc_check']")
     }
 
     vals <- shiny::reactiveValues(tree_root = NULL,
@@ -557,48 +554,8 @@ netShiny <- function(Net.obj = NULL,
                           vals$hide_iso_markers,
                           vals$hide_iso_traits), {
                             shiny::validate(shiny::need(shiny::isTruthy(vals$networks), "Nothing Loaded in Yet"))
-                            mat_f <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net1]])
-                            mat_f2 <- getNZ(vals = vals, input = input, mat = vals$networks[[input$net2]])
-                            mat_f@x[abs(mat_f@x) > 0] <- 1
-                            mat_f2@x[abs(mat_f2@x) > 0] <- 1
-                            set.seed(vals$rseed)
-                            withr::with_seed(vals$rseed, {
-                              if(!is.null(input$nodes_subgraph)){
-                                mat_f <- get_subnet(vals = vals, mat = mat_f)
-                                mat_f2 <- get_subnet(vals = vals, mat = mat_f2)
-                              }
-                              g_f <- igraph::graph_from_adjacency_matrix(mat_f, mode = "undirected")
-                              g_f2 <- igraph::graph_from_adjacency_matrix(mat_f2, mode = "undirected")
-                              attrs <- unique(rbind(igraph::as_data_frame(g_f, "vertices"), igraph::as_data_frame(g_f2, "vertices")))
-                              el <- rbind(igraph::as_data_frame(g_f), igraph::as_data_frame(g_f2))
-                              g_f <- igraph::graph_from_data_frame(el, directed = FALSE, vertices = attrs)
-                              if(vals$layout == "Tree"){
-                                if(all(vals$tree_root %in% igraph::V(g_f)$name)){
-                                  lay <- igraph::layout_as_tree(g_f, root = vals$tree_root)
-                                }
-                                else{
-                                  shiny::showNotification("Some of the inputted nodes are missing from one of current networks", type = "error")
-                                  return(NULL)
-                                }
-                              }
-                              else if(vals$layout == "kk"){
-                                lay <- igraph::layout_with_kk(g_f)
-                              }
-                              else if(vals$layout == "Fruchterman-Reingold"){
-                                lay <- igraph::layout_with_fr(g_f, weights = NULL)
-                              }
-                              else if(vals$layout == "Circle"){
-                                lay <- igraph::layout_in_circle(g_f)
-                              }
-                              else if(vals$layout == "Grid.2D"){
-                                lay <- igraph::layout_on_grid(g_f, dim = 2)
-                              }
-                              else{
-                                lay <- igraph::layout_nicely(g_f, weights = NULL)
-                              }
-                            })
-                            row.names(lay) <- names(igraph::V(g_f))
-                            vals$coords <- lay
+                            lay <- shiny::repeatable(rngfunc = get_coords, seed = vals$rseed)
+                            vals$coords <- lay(vals, input)
                           })
 
     #Evertime a node is clicked, change to the bootstraps tab with
@@ -1017,7 +974,7 @@ netShiny <- function(Net.obj = NULL,
     output$par_cors <- shiny::renderPlot({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      if(shiny::isTruthy(input$cor_m)){
+      if(shiny::isTruthy(input$par_cor_bins)){
         p <- get_par_cor_plot(vals = vals, input = input)
         p
       }
@@ -1076,7 +1033,7 @@ netShiny <- function(Net.obj = NULL,
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
-      net <- get_dif_net(vals = vals, input = input)
+      net <- get_dif_net_compl(vals = vals, input = input)
       net
     })
 
@@ -1131,14 +1088,15 @@ netShiny <- function(Net.obj = NULL,
 
     output$comms_plot <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- comm_detection_plot(vals = vals, input = input, setting = input$net1)
-      p
+      comm_det <- shiny::repeatable(rngfunc = comm_detection_plot, seed = vals$rseed)
+      p <- comm_det(vals = vals, input = input, setting = input$net1)
 
     }, bg = "transparent")
 
     output$comms_plot2 <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      p <- comm_detection_plot(vals = vals, input = input, setting = input$net2)
+      comm_det <- shiny::repeatable(rngfunc = comm_detection_plot, seed = vals$rseed)
+      p <- comm_det(vals = vals, input = input, setting = input$net2)
       p
     }, bg = "transparent")
 
@@ -1168,8 +1126,8 @@ netShiny <- function(Net.obj = NULL,
       )
     }, ignoreInit = TRUE)
 
-    bootstrap_dat <- shiny::reactiveValues(dat_bootstrap = resamples)
-    promise_boot <- shiny::reactiveValues(promise_dat = resamples)
+    bootstrap_dat <- shiny::reactiveValues(dat_bootstrap = NULL)
+    promise_boot <- shiny::reactiveValues(promise_dat = NULL)
 
     shiny::observeEvent(input$unc_check_confirm, {
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
@@ -1232,7 +1190,7 @@ netShiny <- function(Net.obj = NULL,
       if(inva()){
         shiny::invalidateLater(1000)
       }
-      if(!is.null(promise_boot)){
+      if(!is.null(promise_boot$promise_dat)){
         if(isTRUE(future::resolved(promise_boot))){
           inva(FALSE)
           shinyjs::enable("dropdown_res")
@@ -1265,14 +1223,14 @@ netShiny <- function(Net.obj = NULL,
 
       for(i in 1:length(input$files_upload[, 1])){
         t_name <- input$files_upload[[i, 'name']]
-        if(tools::file_ext(t_name) %nin% c("xlsx", "csv", "xls", "txt")){
+        if(get_ext(t_name) %nin% c("xlsx", "csv", "xls", "txt")){
           shiny::showNotification(paste(t_name, "is not in any of the supported formats", sep = " "), type = "warning", duration = NULL)
           next
         }
 
         names_files <- append(names_files, t_name)
 
-        if(tools::file_ext(t_name) == "xlsx" || tools::file_ext(t_name) == "xls"){
+        if(get_ext(t_name) == "xlsx" || get_ext(t_name) == "xls"){
           uploadedFiles$files[[t_name]] <- readxl::read_excel(path = input$files_upload[[i, 'datapath']])
           sett_upFiles(t_name)
         }
@@ -1295,7 +1253,7 @@ netShiny <- function(Net.obj = NULL,
       shiny::req(shiny::isTruthy(uploadedFiles$files) && length(uploadedFiles$files) > 0)
       ind <- which(input$files_upload[['name']] == input$currFile)
       if(shiny::isTruthy(ind)){
-        if(tools::file_ext(input$currFile) == "xlsx" || tools::file_ext(input$currFile) == "xls"){
+        if(get_ext(input$currFile) == "xlsx" || get_ext(input$currFile) == "xls"){
           uploadedFiles$files[[input$currFile]] <- readxl::read_excel(path = input$files_upload[[ind, 'datapath']], col_names = input$header)
         }
         else{
@@ -1319,7 +1277,7 @@ netShiny <- function(Net.obj = NULL,
 
 
       DT::datatable(
-        head(uploadedFiles$files[[input$currFile]], 10),
+        utils::head(uploadedFiles$files[[input$currFile]], 10),
         filter = 'none', extensions = c('Scroller'),
         options = list(scrollY = 250,
                        scrollX = 650,
@@ -1334,12 +1292,12 @@ netShiny <- function(Net.obj = NULL,
 
       if(shiny::isTruthy(input$mapping_upload)){
         mapping_file <- input$mapping_upload
-        if(tools::file_ext(mapping_file$name) %nin% c("xlsx", "csv", "xls", "txt")){
+        if(get_ext(mapping_file$name) %nin% c("xlsx", "csv", "xls", "txt")){
           shiny::showNotification(paste(mapping_file$name, "is not in any of the supported formats", sep = " "), type = "warning")
           shiny::req(isTRUE(FALSE))
         }
 
-        if(tools::file_ext(mapping_file$name) == "xlsx" || tools::file_ext(mapping_file$name) == "xls"){
+        if(get_ext(mapping_file$name) == "xlsx" || get_ext(mapping_file$name) == "xls"){
           mapping <- readxl::read_excel(path = mapping_file$datapath, col_names = input$header_mapping)
         }
         else{
@@ -1534,9 +1492,9 @@ netShiny <- function(Net.obj = NULL,
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$adv_op, {
-      args_net <- methods::formalArgs(netgwas::netphenogeno)[-c(1, 2)]
+      args_net <- names(formals(netgwas::netphenogeno))[-c(1, 2)]
       args_net <- paste("net_", args_net, "_start", sep = "")
-      args_sel <- methods::formalArgs(netgwas::selectnet)[-1]
+      args_sel <- names(formals(netgwas::selectnet))[-1]
       args_sel <- paste("sel_", args_sel, "_start", sep = "")
       args_all <- c(args_net, args_sel, "sel_net_tag")
       if(isTRUE(input$adv_op)){
@@ -1595,7 +1553,7 @@ netShiny <- function(Net.obj = NULL,
     })
 
     output$trait_inputs <- renderUI({
-      shiny::req(isTruthy(counter_trait_types$types))
+      shiny::req(shiny::isTruthy(counter_trait_types$types))
       buttons <- as.list(1:length(counter_trait_types$types))
       buttons <- lapply(buttons, function(i) {
         btName <- counter_trait_types$types[[i]]
