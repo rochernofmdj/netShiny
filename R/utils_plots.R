@@ -361,7 +361,7 @@ get_dif_net_compl <- function(vals, input){
   test.visn$nodes$font.size <- 20
 
   ledges <- data.frame(color = c("blue", "green", "red", "black"),
-                       label = c("Sign Change", "Gained", "Lost", "No Change"), arrows = c("unidrected", "undirected", "undirected", "undirected"))
+                       label = c("Sign Change", "Gained", "Lost", "Same Way Change"), arrows = c("unidrected", "undirected", "undirected", "undirected"))
 
   visNetwork::visNetwork(test.visn$nodes, test.visn$edges, height = '1000px', width = '1000px') %>%
     visNetwork::visIgraphLayout()  %>%
