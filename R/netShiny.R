@@ -100,6 +100,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
+                                shinyWidgets::materialSwitch(inputId = "diff_switch", label = "All Differences", width = "100%"),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("magnifying-glass"), btnReset = shiny::icon("xmark"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
                                 shiny::tags$head(
@@ -343,7 +344,7 @@ netShiny <- function(Net.obj = NULL,
                                                  shiny::tabPanel(title = shiny::textOutput("title_par_cors"),
                                                                  shinyWidgets::dropdownButton(
                                                                    shiny::tags$h3("Plot Settings"),
-                                                                   shiny::numericInput(inputId = "par_cor_bins", label = "# of Bins", min = 0, value = 15),
+                                                                   shiny::numericInput(inputId = "par_cor_bins", label = "Number of Bins", min = 0, value = 15),
                                                                    circle = TRUE, status = "primary", icon = shiny::icon("gear"),
                                                                    tooltip = shinyWidgets::tooltipOptions(title = "Click to change plot's settings")
                                                                  ),
@@ -644,14 +645,14 @@ netShiny <- function(Net.obj = NULL,
     #And shows them when we switch back to the networks tab
     shiny::observeEvent(c(input$tabs, input$tabs_summ_stats, input$tabs_net_mat, input$tab_differences, input$tabs_comm_detect), {
       controls <- c("cor_t", "cor_m", "net1", "net2", "layout", "roundness", "refresh", "print_network", "subgraph",
-                    "sets_selin", "marker", "meas_butt", "cluster_algs", "customize")
+                    "sets_selin", "marker", "meas_butt", "cluster_algs", "customize", "diff_switch")
 
       if(input$tabs == "networks"){
         shiny::updateSelectInput(session, "net1", label = "Left Panel")
         shiny::updateSelectInput(session, "net2", label = "Right Panel")
         if(input$tabs_net_mat == "Networks"){
           sapply(controls, shinyjs::show)
-          sapply(c("sets_selin", "marker", "meas_butt", "cluster_algs"), shinyjs::hide)
+          sapply(c("sets_selin", "marker", "meas_butt", "cluster_algs", "diff_switch"), shinyjs::hide)
           if(vals$mode != "gxe"){
             shinyjs::hide("cor_m")
           }
@@ -711,6 +712,10 @@ netShiny <- function(Net.obj = NULL,
         }
         else if(input$tab_differences == "Network Distances" || input$tab_differences == "Venn Diagram"){
           sapply(controls, shinyjs::hide)
+        }
+        else if (input$tab_differences == "Difference Networks") {
+          sapply(controls, shinyjs::hide)
+          sapply(c("net1", "net2", "diff_switch"), shinyjs::show)
         }
         else{
           sapply(controls, shinyjs::hide)
@@ -1032,7 +1037,12 @@ netShiny <- function(Net.obj = NULL,
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
-      net <- get_dif_net_compl(vals = vals, input = input)
+      if (input$diff_switch) {
+        net <- get_dif_net_compl(vals = vals, input = input)
+      } else {
+        net <- get_dif_net(vals = vals, input = input)
+      }
+
       net
     })
 
