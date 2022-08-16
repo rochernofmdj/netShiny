@@ -787,11 +787,11 @@ bootstrap_func <- function(vals, mkr, new_res){
   }
   p <- suppressWarnings(
     ggplot2::ggplot() +
-      ggplot2::geom_bar(data = tab, ggplot2::aes_(x = ~node,
-                                                 y = ~freq,
-                                                 fill = ~node_group,
-                                                 text = paste0("Name: ",  ~node, "\n", text_tooltip, ~node_group),
-                                                 text2 = paste0("Percentage", ~freq * 100)),
+      ggplot2::geom_bar(data = tab, ggplot2::aes(x = node,
+                                                 y = freq,
+                                                 fill = node_group,
+                                                 text = paste0("Name: ",  node, "\n", text_tooltip, node_group),
+                                                 text2 = paste0("Percentage", freq * 100)),
                         stat = 'identity') +
       ggplot2::geom_point(data = df_conn, ggplot2::aes_(x = ~node, y = ~freq), shape = 23, fill = "red", color = "black", color = "red", size = 2) +
       ggplot2::scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +

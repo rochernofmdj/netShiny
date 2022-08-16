@@ -1019,19 +1019,14 @@ netShiny <- function(Net.obj = NULL,
       else{
         shinyjs::hide("cen_meas_col_switch")
       }
-      if(shiny::isTruthy(input$cor_m)){
-        p <- create_central_meas(vals = vals, input = input)
-        p
-      }
+      p <- create_central_meas(vals = vals, input = input)
+      p
     }, bg = "#F5F2F2")
 
     output$diff_sets <- DT::renderDataTable({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      if(shiny::isTruthy(input$cor_m)){
-        dt <- get_diff_sets(vals = vals, input = input)
-        dt
-      }
-
+      dt <- get_diff_sets(vals = vals, input = input)
+      dt
     })
 
     output$diff_nets <- visNetwork::renderVisNetwork({
@@ -1048,11 +1043,8 @@ netShiny <- function(Net.obj = NULL,
 
     output$diff_table <- DT::renderDataTable({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      if(shiny::isTruthy(input$cor_m)){
-        dt <- get_diff_table(vals = vals, input = input)
-        dt
-      }
-
+      dt <- get_diff_table(vals = vals, input = input)
+      dt
     })
 
     output$distances_table <- shiny::renderTable({
@@ -1089,10 +1081,8 @@ netShiny <- function(Net.obj = NULL,
 
     output$mods <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
-      if(shiny::isTruthy(input$cor_m)){
-        p <- modularity_plot(vals = vals, input = input)
-        p
-      }
+      p <- modularity_plot(vals = vals, input = input)
+      p
     }, bg = "transparent")
 
     output$comms_plot <- shiny::renderPlot({
@@ -1135,7 +1125,7 @@ netShiny <- function(Net.obj = NULL,
       )
     }, ignoreInit = TRUE)
 
-    bootstrap_dat <- shiny::reactiveValues(dat_bootstrap = NULL)
+    bootstrap_dat <- shiny::reactiveValues(dat_bootstrap = resamples)
     promise_boot <- shiny::reactiveValues(promise_dat = NULL)
 
     shiny::observeEvent(input$unc_check_confirm, {

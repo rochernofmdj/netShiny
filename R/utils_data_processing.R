@@ -169,13 +169,11 @@ get_args_recon <- function(input, start_up){
   return(list_args)
 }
 
-
 map_nodes_to_group <- function(vals, input, trt_typs) {
   map_nodes <- vals$map_nodes
   if (isTRUE(input$gxe_mode) && !shiny::isTruthy(map_nodes)) {
     markers <- setdiff(vals$node_names, trt_typs$node)
     map_nodes <- rbind(trt_typs, data.frame("node" = markers, "node_group" = rep("Marker", length(markers))))
-    #map_nodes <- data.frame("node" = vals$node_names, "node_group" = c(rep("Trait", vals$n_traits), rep("Marker", n_markers)))
   }
 
   else if (isFALSE(input$gxe_mode) && !shiny::isTruthy(map_nodes)) {
@@ -199,42 +197,20 @@ map_nodes_to_group <- function(vals, input, trt_typs) {
       no_groups <- setdiff(vals$node_names, trt_typs$node)
       map_nodes <- rbind(trt_typs, data.frame("node" = no_groups, "node_group" = map_nodes$node_group[match(no_groups, map_nodes$node)]))
     }
-    miss_nodes <- setdiff(vals$node_names, map_nodes$node)
-    if (length(miss_nodes) > 0) {
-      map_nodes <- rbind(map_nodes, data.frame("node" = miss_nodes, "node_group" = rep("na", length(miss_nodes))))
-    }
+    map_nodes$node_group[is.na(map_nodes$node_group)] <- "NA"
   }
 
-  # if(isTruthy(input$trait_types)){
-  #   trt_grouping <- data.frame("node" = vals$node_names[1:vals$n_traits], "node_group"= rep(trt_typs$envs, trt_typs$freq))
-  #   map_nodes$node <- as.character(map_nodes$node)
-  #   map_nodes$node_group <- as.character(map_nodes$node_group)
-  #   if(!sum(trt_grouping$node %in% map_nodes$node)){
-  #     map_nodes <- rbind(trt_grouping, map_nodes)
-  #   }
-  #   else{
-  #     map_nodes[match(trt_grouping$node, map_nodes$node, nomatch = 1), ][, 1:2] <- trt_grouping
-  #   }
-  # }
   return(map_nodes)
 }
 
 complete_df <- function(vals){
   # If less unique values in first column, then first column contains groups for nodes, or vice versa
-  #df <- as.data.frame(df)
   new_df <- as.data.frame(vals$map_nodes)
   new_df$node_group <- factor(new_df$node_group)
   node_color <- custom.col[1:length(levels(new_df$node_group))]
   node_color <- node_color[match(new_df$node_group, levels(new_df$node_group))]
   new_df$node_color <- node_color
 
-  # node_group <- df$node_group[match(vals$node_names, df$node)]
-  # node_group <- as.character(node_group)
-  # node_group[is.na(node_group)] <- "na"
-  # new_df <- data.frame("node" = vals$node_names, "node_group" = factor(node_group))
-  # node_color <- custom.col[1:length(levels(new_df$node_group))]
-  # node_color <- node_color[match(new_df$node_group, levels(new_df$node_group))]
-  # new_df$node_color <- node_color
   return(new_df)
 }
 
