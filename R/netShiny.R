@@ -799,19 +799,23 @@ netShiny <- function(Net.obj = NULL,
                                                           shinyWidgets::multiInput(inputId = "nodes_to_change", label = "Nodes to Customize:", choices = all_nodes, choiceNames = all_nodes, selected = vals$nodes_to_change),
                                                           shiny::splitLayout(cellWidths = rep("33%", 3),
                                                                              shiny::actionButton(inputId = "clear_nodes", label = "Clear All"),
-                                                                             if(vals$mode == "gxe") shiny::actionButton(inputId = "all_traits", label = "All Traits"),
-                                                                             if(vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers"),
+                                                                             if (vals$mode == "gxe") {
+                                                                               shiny::actionButton(inputId = "all_traits", label = "All Traits")
+                                                                             } else {
+                                                                               shiny::actionButton(inputId = "all_nodes", label = "All Nodes")
+                                                                             },
+                                                                             if (vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers")
                                                           ),
                                                           shiny::splitLayout(
                                                             colourpicker::colourInput("color_custom", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL),
+                                                            shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL, min = 0),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL),
+                                                            shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL, min = 0),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
                                                           ),
                                                           shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
@@ -915,14 +919,21 @@ netShiny <- function(Net.obj = NULL,
       shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = character(0))
     }, ignoreInit = TRUE)
 
+    shiny::observeEvent(input$all_nodes, {
+      all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = all_nodes)
+    }, ignoreInit = TRUE)
+
     shiny::observeEvent(input$all_traits, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
-      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = vals$trait_nodes)
+      sel_nodes <- c(vals$trait_nodes, input$nodes_to_change)
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = sel_nodes)
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$all_markers, {
       all_nodes <- unique(unlist(lapply(vals$networks, get_nz_nodes, vals = vals, input = input)))
-      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = setdiff(vals$node_names, vals$trait_nodes))
+      sel_nodes <- c(setdiff(vals$node_names, vals$trait_nodes), input$nodes_to_change)
+      shinyWidgets::updateMultiInput(session = session, inputId = "nodes_to_change", label = "Nodes to Customize", choices = all_nodes, selected = sel_nodes)
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$reset_custom, {
