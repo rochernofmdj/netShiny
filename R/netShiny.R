@@ -890,33 +890,30 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(input$color_apply, {
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$color_custom)){
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
-        vals$map_nodes$node_color[vec_change] <- rep(input$color_custom, length(vec_change))
+        vals$map_nodes$node_color[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$color_custom, length(input$nodes_to_change))
       }
     })
 
     shiny::observeEvent(input$size_apply, {
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$size_custom)){
-        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         if(!shiny::isTruthy(vals$map_nodes$node_size)){
           if(vals$mode == "gxe"){
-            #vals$map_nodes$node_size <- c(rep(30, vals$n_traits), rep(20, nrow(vals$map_nodes) - vals$n_traits))
-            vals$map_nodes$node_size <- ifelse(vals$map_nodes %in% vals$trait_nodes, 30, 20)
+            vals$map_nodes$node_size <- ifelse(vals$map_nodes$node %in% vals$trait_nodes, 30, 20)
           }
           else{
             vals$map_nodes$node_size <- rep(25, nrow(vals$map_nodes))
           }
         }
-        vals$map_nodes$node_size[vec_change] <- rep(input$size_custom, length(vec_change))
+        vals$map_nodes$node_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$size_custom, length(input$nodes_to_change))
       }
     }, ignoreInit = TRUE)
 
     shiny::observeEvent(input$font_apply, {
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_custom)){
-        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         if(!shiny::isTruthy(vals$map_nodes$font_size)){
           vals$map_nodes$font_size <- rep(17, length(vals$map_nodes$node))
         }
-        vals$map_nodes$font_size[vec_change] <- rep(input$font_custom, length(vec_change))
+        vals$map_nodes$font_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_custom, length(input$nodes_to_change))
       }
     }, ignoreInit = TRUE)
 
@@ -1462,7 +1459,7 @@ netShiny <- function(Net.obj = NULL,
         vect_err <- append(vect_err, "Too few network names given")
       }
 
-      else if(!shiny::isTruthy(input$trait_types) && isTRUE(input$gxe_mode)){
+      else if(isTRUE(input$gxe_mode) && !shiny::isTruthy(counter_trait_types$types)){
         vect_err <- append(vect_err, "No traits given")
       }
       if(length(vect_err) == 0){

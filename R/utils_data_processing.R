@@ -197,7 +197,12 @@ map_nodes_to_group <- function(vals, input, trt_typs) {
       no_groups <- setdiff(vals$node_names, trt_typs$node)
       map_nodes <- rbind(trt_typs, data.frame("node" = no_groups, "node_group" = map_nodes$node_group[match(no_groups, map_nodes$node)]))
     }
-    map_nodes$node_group[is.na(map_nodes$node_group)] <- "NA"
+    map_nodes$node_group[is.na(map_nodes$node_group)] <- "none"
+
+    miss_nodes <- setdiff(vals$node_names, map_nodes$node)
+    if (length(miss_nodes) > 0) {
+      map_nodes <- rbind(map_nodes, data.frame("node" = miss_nodes, "node_group" = rep("none", length(miss_nodes))))
+    }
   }
 
   return(map_nodes)
