@@ -94,6 +94,7 @@ netShiny <- function(Net.obj = NULL,
                                 shinydashboard::menuItem("Net Diffs", tabName = "differences", icon = shiny::icon("compress")),
                                 shinydashboard::menuItem("Community Detection", tabName = "comm_detect", icon = shiny::icon("chart-bar")),
                                 shinydashboard::menuItem("Uncertainty Check", tabName = "unc_check", icon = shiny::icon("chart-area")),
+                                shinydashboard::menuItem("Manual", tabName = "manual", icon = shiny::icon("circle-info")),
                                 shiny::sliderInput(inputId = "cor_t", "Partial Correlations Traits", min = 0, max = 1, value = 0),
                                 shiny::sliderInput(inputId = "cor_m", "Partial Correlations Markers", min = 0, max = 1, value = 0),
                                 shiny::selectInput("net1", "Left Panel", sett_nms, selected = sett_nms[1]),
@@ -427,6 +428,14 @@ netShiny <- function(Net.obj = NULL,
                               )
       ),
 
+      #Manual
+      shinydashboard::tabItem(tabName = "manual",
+                              shinydashboard::box(
+                                style='width:800px;overflow-x: scroll;height:90vh;overflow-y: auto;',
+                                shiny::includeMarkdown("vignettes/netShiny-Manual.Rmd")
+                              )
+      ),
+
       #Differences Tab
       shinydashboard::tabItem(tabName = "differences",
                               shiny::tabsetPanel(id = "tab_differences",
@@ -662,6 +671,10 @@ netShiny <- function(Net.obj = NULL,
           sapply(controls, shinyjs::hide)
         }
 
+      }
+
+      else if (input$tabs == "manual") {
+        sapply(controls, shinyjs::hide)
       }
 
       else if(input$tabs == "summ_stats"){
@@ -1541,7 +1554,6 @@ netShiny <- function(Net.obj = NULL,
         shiny::isolate(shiny::updateSelectInput(session = session, inputId = "marker", label = "Marker"))
       }
     })
-
 
     #To store observers
     obs_trait_List <- reactiveValues()
