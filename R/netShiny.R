@@ -84,6 +84,13 @@ netShiny <- function(Net.obj = NULL,
   }
 
   sidebar <- shinydashboard::dashboardSidebar(
+    shiny::tags$head(
+      shiny::tags$style(shiny::HTML(
+      ".sidebar {
+            height: 95vh; overflow-y: auto;
+          }"
+      ))
+    ),
     shinyWidgets::setSliderColor(rep("#007c00", 3), c(1, 2, 3)),
     shinyjs::useShinyjs(),
     shinydashboard::sidebarMenu(id = "tabs",
