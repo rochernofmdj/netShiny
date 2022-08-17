@@ -123,6 +123,7 @@ netShiny <- function(Net.obj = NULL,
   body <- shinydashboard::dashboardBody(
     shiny::tags$head(shiny::tags$style(".modal{ overflow-y:auto}")),
     shiny::tags$head(shiny::tags$style(type = "text/css", ".modal-backdrop { z-index: -1}")),
+    shiny::tags$head(shiny::tags$style(shiny::HTML(".main-sidebar { font-size: 18px; }"))),
     custombsModal("modalStartup_step1", "Files for Network Reconstruction", "nothin", size = "large",
                   shiny::fileInput("files_upload", "Choose Files",
                                    multiple = TRUE,
