@@ -25,19 +25,25 @@ netShiny <- function(Net.obj = NULL,
 
   future::plan(future.callr::callr)
 
-  #Check if argument passed are defined
+  # Check if argument passed are defined
   if (!missing(Net.obj)) {
     string_net.obj <- deparse(substitute(Net.obj))
-    if (!exists(string_net.obj)) stop(paste0("Object '", string_net.obj, "' not found"))
+    if (is.null(eval(Net.obj)) && !exists(string_net.obj)) {
+      stop(paste0("Object '", string_net.obj, "' not found"))
+    }
 
   }
   if (!missing(mapping)) {
     string_mapping <- deparse(substitute(mapping))
-    if (!exists(string_mapping)) stop(paste0("Object '", string_mapping, "' not found"))
+    if (is.null(eval(Net.obj)) && !exists(string_mapping)) {
+      stop(paste0("Object '", string_mapping, "' not found"))
+    }
   }
   if (!missing(resamples)) {
     string_resamples <- deparse(substitute(resamples))
-    if (!exists(string_resamples)) stop(paste0("Object '", string_resamples, "' not found"))
+    if (is.null(eval(Net.obj)) && !exists(string_resamples)) {
+      stop(paste0("Object '", string_resamples, "' not found"))
+    }
   }
 
   sett_nms <- NULL
@@ -108,7 +114,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
-                                shinyWidgets::materialSwitch(inputId = "diff_switch", label = "All Differences", width = "100%"),
+                                shinyWidgets::materialSwitch(inputId = "diff_switch", label = "Weighted Matrix", width = "100%"),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("magnifying-glass"), btnReset = shiny::icon("xmark"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
                                 shiny::tags$head(
