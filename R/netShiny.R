@@ -445,7 +445,7 @@ netShiny <- function(Net.obj = NULL,
       shinydashboard::tabItem(tabName = "manual",
                               shinydashboard::box(
                                 style='width:800px;overflow-x: scroll;height:90vh;overflow-y: auto;',
-                                shiny::includeMarkdown("vignettes/netShiny-Manual.Rmd")
+                                shiny::htmlOutput("netshiny_manual")
                               )
       ),
 
@@ -1607,6 +1607,10 @@ netShiny <- function(Net.obj = NULL,
         shinyWidgets::multiInput(inputId = btName, label = btName, choices = vals$node_names)
       }
       )
+    })
+
+    output$netshiny_manual <- renderUI({
+      shiny::includeHTML(path = system.file("extdata", "netshiny-manual.html", package = "netShiny"))
     })
 
   }
