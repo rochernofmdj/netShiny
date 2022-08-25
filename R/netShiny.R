@@ -487,7 +487,7 @@ netShiny <- function(Net.obj = NULL,
                                                                  shinyWidgets::dropMenu(
                                                                    shinyWidgets::actionBttn(inputId = "venn_diag", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
                                                                    shiny::tags$h3("Choose Networks"),
-                                                                   shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Nodes", offLabel = "Edges", value = TRUE),
+                                                                   shinyWidgets::switchInput(inputId = "venn_opt", onLabel = "Edges", offLabel = "Nodes", value = TRUE),
                                                                    shinyWidgets::pickerInput(inputId = "venn_diag_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE
                                                                  ),

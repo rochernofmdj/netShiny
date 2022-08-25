@@ -502,7 +502,7 @@ get_diff_sets <- function(vals, input){
 get_venn_diag <- function(vals, input){
   settings <- vector("list")
 
-  if(isTRUE(input$venn_opt)){
+  if(isFALSE(input$venn_opt)){
     for (i in input$venn_diag_sel){
       settings[[i]] <- get_nz_nodes(mat = vals$networks[[i]], vals = vals, input = input)
     }
