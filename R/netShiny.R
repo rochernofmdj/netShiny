@@ -341,7 +341,7 @@ netShiny <- function(Net.obj = NULL,
                                                  shiny::tabPanel("Matrices",
                                                                  shinyWidgets::dropMenu(
                                                                    shinyWidgets::actionBttn(inputId = "mat_action", icon = shiny::icon("gear"), style = "material-circle", color = "default", size = "sm"),
-                                                                   shinyWidgets::pickerInput(inputId = "mat_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms, multiple = TRUE, options = list(`actions-box` = TRUE)),
+                                                                   shinyWidgets::pickerInput(inputId = "mat_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms[1:2], multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE),
                                                                  shiny::fillPage(
                                                    tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 100px) !important;}"),
@@ -996,6 +996,7 @@ netShiny <- function(Net.obj = NULL,
     output$mat_plots <- plotly::renderPlotly({
       if(vals$mode == "gxe") shiny::validate(shiny::need(!is.null(vals$n_traits), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
+      shiny::validate(shiny::need(length(input$mat_sel) != 0 , "Nothing Loaded in Yet"))
       p <- get_mat_plots(vals = vals, input = input)
 
       plotly::layout(p, paper_bgcolor = 'rgba(0,0,0,0)', plot_bgcolor = 'rgba(0,0,0,0)')
@@ -1498,6 +1499,8 @@ netShiny <- function(Net.obj = NULL,
         }
         shiny::updateSelectInput(session, "net1", choices = vals$sett_names, selected = vals$sett_names[1])
         shiny::updateSelectInput(session, "net2", choices = vals$sett_names, selected = vals$sett_names[2])
+        shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "venn_diag_sel", choices = vals$sett_names, selected = vals$sett_names[1:2]))
+        shiny::isolate(shinyWidgets::updatePickerInput(session = session, inputId = "mat_sel", choices = vals$sett_names, selected = vals$sett_names[1:2]))
         vals$map_nodes <- map_nodes_to_group(vals = vals, input = input, trt_typs = trt_typs)
         vals$map_nodes <- complete_df(vals = vals)
         vals$original_colors <- vals$map_nodes$node_color
