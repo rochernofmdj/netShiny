@@ -114,7 +114,7 @@ netShiny <- function(Net.obj = NULL,
                                 shiny::selectInput("net2", "Right Panel", sett_nms, selected = sett_nms[2]),
                                 shiny::selectInput("sets_selin", "Operation", c("Union", "Intersection", "Complement"), selected = "Union"),
                                 shiny::selectInput("marker", "Markers", all_node_nms),
-                                shinyWidgets::materialSwitch(inputId = "diff_switch", label = "Weighted Matrix", width = "100%"),
+                                shinyWidgets::materialSwitch(inputId = "diff_switch", label = "Adjacency Matrix", width = "100%", value = TRUE),
                                 shinyWidgets::searchInput(inputId = "meas_butt", label = "Add Statistic", placeholder = "func, arg1; func2", btnSearch = shiny::icon("magnifying-glass"), btnReset = shiny::icon("xmark"), width = "100%"),
                                 shinyBS::bsTooltip(id = "meas_butt", title = "Add arguments for function by separting by commas, add addtional function by separating by ;", options = list(hover = "auto")),
                                 shiny::tags$head(
@@ -727,7 +727,7 @@ netShiny <- function(Net.obj = NULL,
       }
 
       else if(input$tabs == "differences"){
-        shiny::updateSelectInput(session, "net1", label = "Network 1")
+        shiny::updateSelectInput(session, "net1", label = "Base Network")
         shiny::updateSelectInput(session, "net2", label = "Network 2")
 
         if(input$tab_differences == "Nodes Sets"){
@@ -826,6 +826,10 @@ netShiny <- function(Net.obj = NULL,
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL, min = 0),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
+                                                          ),
+                                                          shiny::splitLayout(
+                                                            shiny::numericInput(inputId = "label_input", label = "Label Position:", value = 0, min = -3, max = 3),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "label_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL, min = 0),
@@ -1068,7 +1072,7 @@ netShiny <- function(Net.obj = NULL,
     output$diff_nets <- visNetwork::renderVisNetwork({
       shiny::validate(shiny::need(!is.null(vals$networks), "Nothing Loaded in Yet"))
       shiny::validate(shiny::need(input$net1 != input$net2, "Same Networks Selected"))
-      if (input$diff_switch) {
+      if (isFALSE(input$diff_switch)) {
         net <- get_dif_net_compl(vals = vals, input = input)
       } else {
         net <- get_dif_net(vals = vals, input = input)
