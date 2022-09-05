@@ -106,6 +106,15 @@ get_vis_net <- function(vals, input, mat, g, lay){
   else{
     test.visn$nodes$font.size <- 17
   }
+
+  if(shiny::isTruthy(vals$map_nodes$font_color)){
+    test.visn$nodes$font.color <- vals$map_nodes$font_color[match(sel_nodes, vals$map_nodes$node)]
+  }
+
+  if(shiny::isTruthy(vals$map_nodes$font.vadjust)){
+    test.visn$nodes$font.vadjust <- vals$map_nodes$font.vadjust[match(sel_nodes, vals$map_nodes$node)]
+  }
+
   visNetwork::visNetwork(test.visn$nodes, test.visn$edges, height = '100%', width = '100%') %>%
     visNetwork::visIgraphLayout(layout = "layout.norm", layoutMatrix = lay, randomSeed = vals$rseed) %>%
     visNetwork::visOptions(highlightNearest = list(enabled = T, hover = T), selectedBy = sel_by) %>%
