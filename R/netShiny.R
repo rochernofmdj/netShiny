@@ -527,7 +527,6 @@ netShiny <- function(Net.obj = NULL,
                                   mode = "gxe",
                                   subgraph_nodes = NULL,
                                   nodes_to_change = NULL,
-                                  color_custom = NULL,
                                   layout = "Automatic",
                                   roundness = 0,
                                   cluster_algs = "Fast Greedy",
@@ -820,7 +819,7 @@ netShiny <- function(Net.obj = NULL,
                                                                              if (vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers")
                                                           ),
                                                           shiny::splitLayout(
-                                                            colourpicker::colourInput("node_color", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+                                                            colourpicker::colourInput("node_color", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "node_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
@@ -828,7 +827,7 @@ netShiny <- function(Net.obj = NULL,
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            colourpicker::colourInput("font_color", "Font Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+                                                            colourpicker::colourInput("font_color", "Font Color:", allowTransparent = TRUE, closeOnClick = TRUE),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
