@@ -563,6 +563,7 @@ netShiny <- function(Net.obj = NULL,
     shiny::observeEvent(c(input$node_color_apply,
                           input$font_size_apply,
                           input$node_size_apply,
+                          input$font_vadjust_apply,
                           input$cor_t,
                           input$cor_m,
                           input$net1,
@@ -836,7 +837,7 @@ netShiny <- function(Net.obj = NULL,
                                                           ),
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "font_vadjust", label = "Font Label V-adjust:", value = 0),
-                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_label_apply", label = "apply"))
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_vadjust_apply", label = "apply"))
                                                           ),
                                                           shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
                                                           shiny::hr(),
@@ -904,6 +905,16 @@ netShiny <- function(Net.obj = NULL,
       if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$node_color)){
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
         vals$map_nodes$node_color[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$node_color, length(input$nodes_to_change))
+      }
+    })
+
+    shiny::observeEvent(input$font_vadjust_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_vadjust)){
+        if (!shiny::isTruthy(vals$map_nodes$font.vadjust)) {
+          vals$map_nodes$font.vadjust <- 0
+        }
+        vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
+        vals$map_nodes$font.vadjust[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_vadjust, length(input$nodes_to_change))
       }
     })
 
