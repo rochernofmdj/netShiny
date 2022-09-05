@@ -828,12 +828,16 @@ netShiny <- function(Net.obj = NULL,
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            shiny::numericInput(inputId = "label_input", label = "Label Position:", value = 0, min = -3, max = 3),
-                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "label_apply", label = "apply"))
+                                                            colourpicker::colourInput("font_color", "Font Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL, min = 0),
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
+                                                          ),
+                                                          shiny::splitLayout(
+                                                            shiny::numericInput(inputId = "font_vadjust", label = "Font Label V-adjust:", value = 0),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_label_apply", label = "apply"))
                                                           ),
                                                           shiny::actionButton(inputId = "reset_custom", label = "Reset to Default"),
                                                           shiny::hr(),
