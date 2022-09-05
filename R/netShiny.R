@@ -561,7 +561,7 @@ netShiny <- function(Net.obj = NULL,
     #the threshold values are changed, or that the layout structure is changed
     #This controls the coordinates for the left panel network, which will help us match the
     #right panel network
-    shiny::observeEvent(c(input$color_apply,
+    shiny::observeEvent(c(input$node_color_apply,
                           input$font_size_apply,
                           input$size_apply,
                           input$cor_t,
@@ -820,8 +820,8 @@ netShiny <- function(Net.obj = NULL,
                                                                              if (vals$mode == "gxe") shiny::actionButton(inputId = "all_markers", label = "All Markers")
                                                           ),
                                                           shiny::splitLayout(
-                                                            colourpicker::colourInput("color_custom", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
-                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "color_apply", label = "apply"))
+                                                            colourpicker::colourInput("node_color", "Node Color:", allowTransparent = TRUE, closeOnClick = TRUE, value = vals$color_custom),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "node_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL, min = 0),
@@ -901,10 +901,10 @@ netShiny <- function(Net.obj = NULL,
       vals$hide_iso_nodes <- input$hide_iso_nodes
     })
 
-    shiny::observeEvent(input$color_apply, {
-      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$color_custom)){
+    shiny::observeEvent(input$node_color_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$node_color)){
         vec_change <- which(vals$map_nodes$node %in% input$nodes_to_change)
-        vals$map_nodes$node_color[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$color_custom, length(input$nodes_to_change))
+        vals$map_nodes$node_color[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$node_color, length(input$nodes_to_change))
       }
     })
 
