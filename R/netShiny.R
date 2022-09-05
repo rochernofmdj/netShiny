@@ -562,7 +562,7 @@ netShiny <- function(Net.obj = NULL,
     #right panel network
     shiny::observeEvent(c(input$node_color_apply,
                           input$font_size_apply,
-                          input$size_apply,
+                          input$node_size_apply,
                           input$cor_t,
                           input$cor_m,
                           input$net1,
