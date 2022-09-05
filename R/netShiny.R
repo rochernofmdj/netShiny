@@ -978,6 +978,8 @@ netShiny <- function(Net.obj = NULL,
       vals$map_nodes$node_color <- vals$original_colors
       vals$map_nodes$node_size <- NULL
       vals$map_nodes$font_size <- NULL
+      vals$map_nodes$font_color <- "black"
+      vals$map_nodes$font.vadjust <- 0
 
     }, ignoreInit = TRUE)
 
