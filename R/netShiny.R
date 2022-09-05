@@ -562,7 +562,7 @@ netShiny <- function(Net.obj = NULL,
     #This controls the coordinates for the left panel network, which will help us match the
     #right panel network
     shiny::observeEvent(c(input$color_apply,
-                          input$font_apply,
+                          input$font_size_apply,
                           input$size_apply,
                           input$cor_t,
                           input$cor_m,
@@ -832,8 +832,8 @@ netShiny <- function(Net.obj = NULL,
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            shiny::numericInput(inputId = "font_custom", label = "Font Size:", value = NULL, min = 0),
-                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_apply", label = "apply"))
+                                                            shiny::numericInput(inputId = "font_size", label = "Font Size:", value = NULL, min = 0),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "font_size_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
                                                             shiny::numericInput(inputId = "font_vadjust", label = "Font Label V-adjust:", value = 0),
@@ -922,12 +922,12 @@ netShiny <- function(Net.obj = NULL,
       }
     }, ignoreInit = TRUE)
 
-    shiny::observeEvent(input$font_apply, {
-      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_custom)){
+    shiny::observeEvent(input$font_size_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_size)){
         if(!shiny::isTruthy(vals$map_nodes$font_size)){
           vals$map_nodes$font_size <- rep(17, length(vals$map_nodes$node))
         }
-        vals$map_nodes$font_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_custom, length(input$nodes_to_change))
+        vals$map_nodes$font_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_size, length(input$nodes_to_change))
       }
     }, ignoreInit = TRUE)
 
