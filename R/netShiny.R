@@ -564,6 +564,7 @@ netShiny <- function(Net.obj = NULL,
                           input$font_size_apply,
                           input$node_size_apply,
                           input$font_vadjust_apply,
+                          input$font_color_apply,
                           input$cor_t,
                           input$cor_m,
                           input$net1,
@@ -938,6 +939,15 @@ netShiny <- function(Net.obj = NULL,
           vals$map_nodes$font_size <- rep(17, length(vals$map_nodes$node))
         }
         vals$map_nodes$font_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_size, length(input$nodes_to_change))
+      }
+    }, ignoreInit = TRUE)
+
+    shiny::observeEvent(input$font_color_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$font_color)){
+        if(!shiny::isTruthy(vals$map_nodes$font_color)){
+          vals$map_nodes$font_color <- rep("black", length(vals$map_nodes$node))
+        }
+        vals$map_nodes$font_color[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$font_color, length(input$nodes_to_change))
       }
     }, ignoreInit = TRUE)
 
