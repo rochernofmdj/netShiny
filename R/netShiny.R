@@ -823,8 +823,8 @@ netShiny <- function(Net.obj = NULL,
                                                             shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "node_color_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
-                                                            shiny::numericInput(inputId = "size_custom", label = "Node Size:", value = NULL, min = 0),
-                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "size_apply", label = "apply"))
+                                                            shiny::numericInput(inputId = "node_size", label = "Node Size:", value = NULL, min = 0),
+                                                            shiny::div(style = "margin-top: 25px;", shiny::actionButton(inputId = "node_size_apply", label = "apply"))
                                                           ),
                                                           shiny::splitLayout(
                                                             colourpicker::colourInput("font_color", "Font Color:", allowTransparent = TRUE, closeOnClick = TRUE),
@@ -907,8 +907,8 @@ netShiny <- function(Net.obj = NULL,
       }
     })
 
-    shiny::observeEvent(input$size_apply, {
-      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$size_custom)){
+    shiny::observeEvent(input$node_size_apply, {
+      if(shiny::isTruthy(input$nodes_to_change) && shiny::isTruthy(input$node_size)){
         if(!shiny::isTruthy(vals$map_nodes$node_size)){
           if(vals$mode == "gxe"){
             vals$map_nodes$node_size <- ifelse(vals$map_nodes$node %in% vals$trait_nodes, 30, 20)
@@ -917,7 +917,7 @@ netShiny <- function(Net.obj = NULL,
             vals$map_nodes$node_size <- rep(25, nrow(vals$map_nodes))
           }
         }
-        vals$map_nodes$node_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$size_custom, length(input$nodes_to_change))
+        vals$map_nodes$node_size[match(input$nodes_to_change, vals$map_nodes$node)] <- rep(input$node_size, length(input$nodes_to_change))
       }
     }, ignoreInit = TRUE)
 
