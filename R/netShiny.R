@@ -344,7 +344,7 @@ netShiny <- function(Net.obj = NULL,
                                                                    shinyWidgets::pickerInput(inputId = "mat_sel", label = "Choose Networks", choices = sett_nms, selected = sett_nms[1:2], multiple = TRUE, options = list(`actions-box` = TRUE)),
                                                                    hideOnClick = TRUE),
                                                                  shiny::fillPage(
-                                                   tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 100px) !important;}"),
+                                                   tags$style(type = "text/css", "#mat_plots {height: calc(100vh - 135px) !important;}"),
                                                    shinycssloaders::withSpinner(plotly::plotlyOutput("mat_plots", width = "100%", height = "100%"), color = "#007c00", size = 2)
                                                  ))
 
